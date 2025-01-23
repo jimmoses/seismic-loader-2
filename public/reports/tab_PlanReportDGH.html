@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+    <link href="/stylesheets/bootstrap.min.css" rel="stylesheet" >
+    <link href="/stylesheets/css2.css" rel="stylesheet" >        
+    <link href="/lib/bootstrap-icons.css" rel="stylesheet" >
+    <script src="/lib/bootstrap.bundle.min.js"></script>
+    <script src="/lib/ag-grid-community.min.js"></script>
+    
+    <title>Action Plan 2024: Monitoring Dashboard</title>
+</head>
+<body>
+    <!-- Wait modal -->
+    <div id="wait-modal" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Fetching...</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+      
+      <div class="container-fluid">
+  
+          <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+              <div class="container-fluid">
+                <a class="logo" href="#" title="ONGC">
+                    <img style="float: left; padding-right: 15px" src="/favicon.ico">
+                </a>
+                  <a class="navbar-brand" href="#">Action Plan 2024: Monitoring Dashboard</a>
+                  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon"></span>
+                  </button>
+              
+                  <div class="collapse navbar-collapse" id="navbarColor01">
+                  <ul class="navbar-nav me-auto">
+                      <li class="nav-item">
+                        <a class="nav-link" href="/index.html">
+                            <i class="bi-house-door"></i> Home                            
+                        </a>
+                      </li>
+                      <!-- <li class="nav-item">
+                      <a class="nav-link" href="#">Features</a>
+                      </li>
+                      <li class="nav-item">
+                      <a class="nav-link" href="#">Pricing</a>
+                      </li>
+                      <li class="nav-item">
+                      <a class="nav-link" href="#">About</a>
+                      </li> -->
+                      <!-- <li class="nav-item dropdown">
+                      <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Dropdown</a>
+                      <div class="dropdown-menu">
+                          <a class="dropdown-item" href="#">Action</a>
+                          <a class="dropdown-item" href="#">Another action</a>
+                          <a class="dropdown-item" href="#">Something else here</a>
+                          <div class="dropdown-divider"></div>
+                          <a class="dropdown-item" href="#">Separated link</a>
+                      </div>
+                      </li> -->
+                  </ul>
+                  <!-- <form class="d-flex">
+                      <input class="form-control me-sm-2" type="text" placeholder="Search">
+                      <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+                  </form> -->
+                  <ul class="navbar-nav">
+                      <li class="nav-item dropdown">
+                          <a id="mnu_username" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Welcome!</a>
+                          <div class="dropdown-menu">
+                              <!-- <a class="dropdown-item" href="#">Action</a>
+                              <a class="dropdown-item" href="#">Another action</a>
+                              <a class="dropdown-item" href="#">Something else here</a> -->
+                              <div class="dropdown-divider"></div>
+                              <a class="dropdown-item" href="#" onclick="logout()">Log out</a>
+                          </div>
+                      </li>
+                  </ul>
+                  </div>
+              </div>
+          </nav>
+  
+        <div style="padding: 15px">
+            <form class="row g-3">
+                <div class="col-md-2">
+                        
+                </div>
+                <!-- <div class="col-md-3">
+                    <label for="assetname" class="form-label">Asset Name</label>
+                    <select class="form-select" id="assetname" onchange="populateFields(this.value);">
+                    </select>
+                </div> -->
+                <div class="col-md-3" >
+                        
+                    <!-- <label for="fieldname" class="form-label">Field Name</label>
+                    <select class="form-select" id="field_name" onchange="getData()">
+                    </select>
+                    <span class="badge bg-light">Light</span> -->
+                </div>                          
+                <div class="col-md-2">
+                    <label for="month_year" class="form-label" hidden="hidden">Month</label>                
+                    <select class="form-select" id="month_year" hidden="hidden" onchange="hideForm()">
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    
+                </div>
+            </form>
+        </div>
+  
+      </div>
+  
+        <!-- <div class="spacer"></div> -->
+      
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-3" id="colOptions">
+
+                    <!-- Plot Button -->
+                    <div class="container btn-group optionAlignPadding">              
+                            <button id="btn_fetch" class="btn btn-sm btn-success" type="button"  onclick="getData()" >Fetch Data</button>                                  
+                        <button type="button" class="btn btn-sm btn-primary" id='unit'>TPD / MMSCMD</button>
+                        <button type="button" class="btn btn-sm btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="document.getElementById('unit').innerHTML='MT / SCM'">MT / SCM</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="document.getElementById('unit').innerHTML='MMT / MMSCM'">MMT / MMSCM</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="document.getElementById('unit').innerHTML='TPD / SCMD'">TPD / SCMD</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="document.getElementById('unit').innerHTML='TPD / MMSCMD'">TPD / MMSCMD</a></li>
+                            <!-- <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">Separated link</a></li> -->
+                        </ul>
+                    </div><br/><br/>
+
+                    <!-- Oil / Gas -->
+                    <div class="container btn-group optionAlignPadding" role="group" aria-label="Basic checkbox toggle button group">
+                            <input type="checkbox" class="btn-check" id="btncheck_oil" autocomplete="off">
+                            <label class="btn btn-sm btn-outline-primary" for="btncheck_oil">Oil</label>
+                            <input type="checkbox" class="btn-check" id="btncheck_gas" autocomplete="off">
+                            <label class="btn btn-sm btn-outline-primary" for="btncheck_gas">Gas</label>                            
+                    </div><br/>
+
+                    <!-- Base, Firm, Upside -->
+                    <div style="display:none" class="container btn-group" role="group" aria-label="Basic checkbox toggle button group">
+                            <input type="checkbox" class="btn-check" id="btncheck_base" autocomplete="off">
+                            <label class="btn btn-sm btn-outline-primary" for="btncheck_base">BASE</label>
+                            <input type="checkbox" class="btn-check" id="btncheck_firm" autocomplete="off">
+                            <label class="btn btn-sm btn-outline-primary" for="btncheck_firm">FIRM</label>
+                            <input type="checkbox" class="btn-check" id="btncheck_upside" autocomplete="off">
+                            <label class="btn btn-sm btn-outline-primary" for="btncheck_upside">UPSIDE</label>
+                    </div><br/>                    
+                    
+                    <!-- Financial Year -->
+                    <div class="row optionAlignPadding">
+                        <div class="form-floating col-6">
+                            <select class="form-select" id="financial_year" onchange="populateMonth()">
+                                <option>2021-22</option>
+                                <option>2022-23</option>
+                                <option>2023-24</option>
+                            </select><br/>
+                            <label for="financial_year"><h6>&nbsp;&nbsp;&nbsp;&nbsp;Financial Year</h6></label>   
+                        </div>
+                        <!-- Asset Type: Onshore / Offshore -->
+                        <div class="form-floating  col-6">
+                            <select class="form-select" id="asset_type" onchange="populateAssets(value.toUpperCase())">
+                                <option>Onshore</option>
+                                <option>Offshore</option>
+                            </select><br/>
+                            <label for="asset_type"><h6>&nbsp;&nbsp;&nbsp;&nbsp;Asset Type</h6></label>   
+                        </div>
+                    </div>
+
+                    <!-- Data Type: Plan or Actual -->
+                    <div class="row optionAlignPadding">
+                        <div class="form-floating col-6">
+                            <select class="form-select" id="data_type">
+                                <option>Plan</option>
+                                <option>Actual</option>
+                            </select><br/>
+                            <label for="data_type"><h6>&nbsp;&nbsp;&nbsp;&nbsp;Data Type</h6></label>   
+                        </div>
+
+                        <div class="form-floating col-6">
+                            <button id="btn_fetch" class="btn btn-sm btn-outline-primary" type="button" onclick="downloadData('Oil')" style="height: 28.5px; width: 100%;"><i class="bi bi-download"></i>&nbsp;&nbsp;Oil Data</button>                                  
+                            <button id="btn_fetch" class="btn btn-sm btn-outline-primary" type="button" onclick="downloadData('Gas')" style="height: 28.5px; width: 100%;"><i class="bi bi-download"></i>&nbsp;&nbsp;Gas Data</button>                                  
+                        </div>
+                    </div>
+    
+
+                    <!-- Asset Accordion -->
+                    <div class="accordion" id="accordionAsset">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingAsset">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAsset" aria-expanded="false" aria-controls="collapseAsset">
+                                    Asset List
+                                </button>
+                                </h2>
+                                <div id="collapseAsset" class="accordion-collapse collapse show" aria-labelledby="headingAsset" data-bs-parent="#accordionAsset" style="">
+                                <div class="accordion-body">
+                                    <div class="text-center" style="padding-bottom: 10px;">
+                                        <span class="select badge bg-primary" target="assetList">Select All</span>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <span class="select badge bg-dark" target="assetList">Clear Selection</span>
+                                    </div>
+                                    <div id="assetList"></div>
+                                </div>
+                                </div>
+                            </div><br/>
+                    </div>
+                    <!-- Field Accordion -->
+                    <div class="accordion" id="accordionField">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingField">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseField" aria-expanded="false" aria-controls="collapseField">
+                                    Field List
+                                </button>
+                                </h2>
+                                <div id="collapseField" class="accordion-collapse collapse show" aria-labelledby="headingField" data-bs-parent="#accordionField" style="">
+                                <div class="accordion-body">
+                                    <div class="text-center" style="padding-bottom: 10px;">
+                                        <span class="select badge bg-primary" target="fieldList">Select All</span>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <span class="select badge bg-dark" target="fieldList">Clear Selection</span>
+                                    </div>
+                                    <div id="fieldList"></div>
+                                </div>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+                <div class="col-9" id="colChartArea">
+                    <div class="row">
+                        <div class="form-check form-switch" >
+                                <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" onclick="toggleOptions(this.checked)" checked="true">
+                                <label class="form-check-label" for="flexSwitchCheckDefault" >Plot Options</label>
+                            </div><br/><br/>
+                        <div class="row" id="monthList" target="monthList" style="padding: 0px 20px;"></div>
+                        <div class="col-11" id='oilChartArea' hidden="hidden">
+                            <br/>
+                            <h3 class='text-center' >Oil</h3>
+                            <h5 class='text-center' id="tableTitleOil"></h5>
+                            <div id='tableOil' style="height: 400px" class="ag-theme-balham">
+                            </div>
+                        </div>                        
+                    </div>
+                    <div class="row">
+                        <div class="col-11" id='gasChartArea' hidden="hidden">
+                            <br/>
+                            <h3 class='text-center' >Gas</h3>
+                            <h5 class='text-center' id="tableTitleGas"></h5>
+                            <div id='tableGas' style="height: 400px" class="ag-theme-balham">
+                            </div>
+                        </div>                        
+                    </div>
+                </div>
+                
+            </div>
+        </div>     
+        <footer class="footer mt-auto py-3 bg-light">
+                <div class="container">
+                    <span class="text-muted">Developed & Maintained by EPINET.</span>
+                </div>
+            </footer>
+    
+</body>
+    <script src="/javascripts/common.js"></script>
+    <script>
+        window.onload = function() {
+            g_init();
+        };
+
+        function g_init(){
+            //Checks session and sets display of options accordingly
+            checkSession()
+            .then(response => {
+                console.log(response);
+                if(response == "logged in"){
+                    //Show username
+                    document.querySelector('#mnu_username').innerHTML = "Welcome "+ g_user.name;            
+                    if(g_user.usertype=="asset" ){
+                         document.getElementById("accordionAsset").setAttribute("hidden","hidden");
+                         populateAssets();
+                         populateFields();
+
+                         //Fix asset type
+                        document.getElementById("asset_type").value = "O" + g_user.asset_type.toLocaleLowerCase().substring(1);
+                        document.getElementById("asset_type").setAttribute("disabled","disabled");
+                    }
+                    else if(g_user.usertype=="admin" || g_user.usertype=="viewer" ){
+                        populateAssets("ONSHORE");
+                        //  populateFields(document.getElementById("assetname").value);
+                    }                    
+                    populateMonth();
+                    initialSelect();
+                }
+                else if (response == "not logged in") window.location.href="/index.html";
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+        }
+
+        function showModal(title,message){
+
+            x = new bootstrap.Modal(document.getElementById('message-modal'));
+            x.show();
+            document.getElementById('modal_title').innerHTML = title;
+            document.getElementById('modal_message').innerHTML = message;
+        }   
+
+        function initialSelect(){
+            let today = new Date(Date.now());
+            let fy;
+
+            if(today.getMonth()<2)
+                fy = today.getFullYear()-1 + "-" + (today.getFullYear()).toString().substring(2,4);
+            else
+                fy = today.getFullYear() + "-" + (today.getFullYear()+1).toString().substring(2,4);
+
+            let fy_month = today.getMonth()<2? 10+today.getMonth() : today.getMonth()-2;
+
+            console.log("Financial Year: "+fy, "Month in FY: "+fy_month);
+
+            document.querySelector("#financial_year").value = fy;
+            populateMonth();
+
+            let currentMonth = today.getMonth() +1; //Month begins with 0
+            let months = document.querySelector("#monthList").childNodes
+            for (let i = 0; i < fy_month - 1; i++) {
+                const element = months[i];
+                element.classList.toggle('bg-light');
+                element.classList.toggle('bg-success');
+            }
+        }
+
+
+        
+    </script>
+    <script src="/javascripts/tab_PlanReportDGH.js"></script>
+     <style>
+            .barPlot {
+                height: 400px;          
+            }
+            .field, .asset, .month {
+                cursor: pointer;
+                user-select: none;
+                margin-right: 4px;
+            }
+            .select {
+                cursor: pointer;
+                user-select: none;
+            }
+
+            td.subtotal.plan {
+                background-color: #d5d4d4;
+            }
+            td.subtotal.actual {
+                background-color: #f0f0f0;
+            }
+
+            .footer {
+                    z-index: -1;
+                    position: absolute;
+                    bottom: 0;
+                    width: 20%;
+                }
+          
+          .navbar, .logo img{
+               height: 48px
+          }
+
+            td.plan{
+                background-color: #f0f0f0
+            }
+            
+            .cell-span {
+               background-color: #75caeb;
+               border-left: 1px solid lightgrey !important;
+               border-right: 1px solid lightgrey !important;
+               border-bottom: 1px solid lightgrey !important;
+               text-orientation: sideways-right;
+          }
+          .btn-sm{
+               line-height: 1;
+          }
+
+          .ag-theme-balham .ag-header{
+               background-color: #158cba;
+          }
+          .ag-theme-balham .ag-header-row{
+               color: white;
+          }
+
+
+          .optionAlignPadding {
+              padding-left: 10px;
+              padding-right: 10px;
+          }
+      </style>
+</html>

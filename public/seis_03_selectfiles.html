@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>EDS</title>
+    <script src="./lib/w2ui/w2ui-2.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="./lib/w2ui/w2ui-2.0.min.css">
+    <!-- <link rel="stylesheet" type="text/css" href="./lib/bootstrap-icons.min.css"> -->
+
+    <link href="./stylesheets/bootstrap.min.css" rel="stylesheet">
+    <link href="./stylesheets/css2.css" rel="stylesheet">
+    <link href="./lib/bootstrap-icons.css" rel="stylesheet">
+    <script src="./lib/bootstrap.bundle.min.js"></script>
+</head>
+<style>
+    #w2grd_file_selection {
+        height: 350px;
+        margin: 0px 0px 20px 25px;
+        transition: 0.7s ease-out;
+    }
+    #w2grid_files_for_loading {
+        height: 350px;
+        margin: 0px 20px 20px 0px;
+        transition: 0.7s ease-out;
+    }
+    #div_header_tabs{
+        margin: 0px 150px 20px 150px;
+    }
+</style>
+
+<body>
+    <!-- <button type="button" onclick="change_page_mode('file_select')">file select</button>
+    <button type="button" onclick="change_page_mode('load_seismic')">load</button> -->
+    <div style="height: 50px;"></div>
+    <div class="row">
+        <div class="col-7">
+            <div id="w2grd_file_selection"></div>
+        </div>
+        <div class="col-5">
+            <div id="w2grid_files_for_loading" style="height: 350px;"></div>
+        </div>
+    </div>
+    
+    <div id="div_loader">
+        
+        <div id="div_header_tabs">
+            <div id="w2tab_headers" style="margin-bottom: 20px;"></div>            
+            <div id="tab1" class="tab-content">
+                First tab.
+            </div>
+            <div id="tab2" class="tab-content">
+                Second tab, with some HTML in it. :)
+            </div>
+            <div id="tab3" class="tab-content">
+                What did you expect, of course it is the third tab.
+            </div>
+        </div>
+        
+    </div>
+
+
+    <script>
+        var g_mode = "file_select";
+
+        //Check if anything is passed. If not, default to file selection
+
+
+        
+
+
+        
+
+
+
+        //File listing
+        let file_folder_listing = new w2grid({
+            name: 'file_folder_listing',
+            box: '#w2grd_file_selection',
+            header: '<b>Select Files from Staging Area</>',
+            show: {
+                header: true,
+                // footer: true,
+                toolbar: true,
+                // toolbarAdd: true,
+                // lineNumbers: true
+            },
+            columns: [
+                { field: 'file_name', text: 'File Name', size: '30%' },
+                { field: 'file_size', text: 'Size', size: '30%' },
+                { field: 'modified', text: 'Last Modified', size: '40%' },
+                { field: 'created', text: 'Created', size: '90px' }
+            ],
+            records: [                
+                {
+                    recid: 2, file_name: 'CY2021', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012',
+                    w2ui: {
+                        children: [
+                            { recid: 21, file_name: 'test1.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
+                            {
+                                recid: 22, file_name: 'test2.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012',
+                                w2ui: {
+                                    children: [
+                                        { recid: 221, file_name: 'test3.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
+                                        {
+                                            recid: 222, file_name: 'test4.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012',
+                                            w2ui: {
+                                                children: [
+                                                    { recid: 2221, file_name: 'test5.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
+                                                    { recid: 2222, file_name: 'test6.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' },
+                                                    { recid: 2223, file_name: 'test7.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
+                                                    { recid: 2224, file_name: 'test8.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' }
+                                                ]
+                                            }
+                                        },
+                                        { recid: 223, file_name: 'test9.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
+                                        { recid: 224, file_name: 'test10.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' }
+                                    ]
+                                }
+                            },
+                            { recid: 23, file_name: 'test11.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
+                            { recid: 24, file_name: 'test12.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' }
+                        ]
+                    }
+                },
+                {
+                    recid: 3, file_name: 'KGPG', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012',
+                    w2ui: {
+                        children: [
+                            { recid: 11, file_name: 'pstm.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
+                            { recid: 12, file_name: 'psdm.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' },
+                            { recid: 13, file_name: 'test.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
+                            { recid: 14, file_name: 'another.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' }
+                        ]
+                    }
+                },
+                { recid: 1, file_name: 'CY2019_PSTM.sgy', file_size: '150 GB', modified: '4/9/2012', created: '4/3/2012', w2ui: { children: [] } }
+            ],
+            toolbar: {
+                items: [
+                    { type: 'button', id: 'add_files', text: 'Add Files', icon: 'bi bi-arrow-right-square' }
+                    // { type: 'break' },
+                    // { type: 'button', id: 'done', text: 'Proceed to load data', icon: 'bi bi-arrow-right-square' },
+                ],
+                onClick: function (target, data) {
+                    switch (target) {
+                        case "add_files":
+                            let selected_files = w2ui.file_folder_listing.getSelection();
+                            let num_selected_files = selected_files.length;
+                            if(num_selected_files == 0) {alert ("No file selected"); return;}
+                            for (let i = 0; i < num_selected_files; i++) {
+                                w2ui.file_load_list.add(
+                                {
+                                    recid: selected_files[i], 
+                                    file_name: w2ui.file_folder_listing.get(selected_files[i]).file_name
+                                });
+                            }
+                            
+                            break;                    
+                        default: //Proceed to Load Data
+                            change_page_mode("load_seismic");                            
+                            break;
+                    }
+                }
+            },
+            onAdd: function(event){
+                console.log(event.target);
+                console.log(this);
+                
+
+            }
+        })
+
+        // widget configuration
+        let file_load_list = new w2grid({
+            name: 'file_load_list',
+            box: '#w2grid_files_for_loading',
+            show: {
+                header: true,
+                // footer: true,
+                toolbar: true
+            },
+            toolbar: {
+                items: [
+                    // { type: 'button', id: 'add_files', text: 'Add files from stage', icon: 'bi bi-plus-circle' },
+                    // { type: 'break' },
+                    // { type: 'button', id: 'done', text: 'Proceed to load data', icon: 'bi bi-arrow-right-square' },
+                ],
+                onClick: function (target, data) {
+                    change_page_mode("file_select");  
+                }
+            },
+            header: '<b>Files Selected for Loading</>',
+            // records: [{
+            //     file_name: 'test',
+            //     crs: 'test',
+            //     survey: "testsrvy",
+            //     qc: true
+            // }],
+            method: 'GET', // need this to avoid 412 error on Safari
+            columns: [
+                { field: 'file_name', text: 'File Name', size: '60%' },
+                // { field: 'crs', text: 'Spheroid', size: '30%', editable: { type: 'text' } },
+                // { field: 'survey', text: 'Survey Name', size: '30%' },
+                // { field: 'stage', text: 'Stage', size: '40%' },
+                // { field: 'version', text: 'Version', size: '120px' },
+                // { field: 'dt', text: 'Depth/Time', size: '120px' },
+                // { field: 'qc', text: 'QC <input type="checkbox" id="qc_check_all">', type: 'toggle', size: '60px', editable: { type: 'checkbox' } }
+            ]
+        })
+
+        let w2tab_headers = new w2tabs({
+            box: '#w2tab_headers',
+            name: 'tabs',
+            active: 'tab1',
+            tabs: [
+                { id: 'tab1', text: 'EBCDIC Header' },
+                { id: 'tab2', text: 'Binary Header' },
+                { id: 'tab3', text: 'Trace Headers' }
+            ],
+            onClick(event) {
+                document.querySelectorAll(".tab-content").forEach(x=>x.setAttribute("style","display:none"));
+                document.querySelector(`#${event.target}`).setAttribute("style","");
+            }
+        })
+        
+        // change_page_mode("file_select");
+
+    </script>
+</body>
+
+</html>

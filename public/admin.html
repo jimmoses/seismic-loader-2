@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+    <link href="/stylesheets/bootstrap.min.css" rel="stylesheet" >    
+    <link href="/stylesheets/css2.css" rel="stylesheet" >    
+    <link href="/lib/bootstrap-icons.css" rel="stylesheet" >
+    <script src="/lib/bootstrap.bundle.min.js"></script>
+
+    <title>Action Plan 2024: Monitoring Dashboard</title>
+</head>
+<body>
+    <div id="message-modal" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal_title">Title</h5>
+            </div>
+            <div class="modal-body" id="modal_message">
+                Message
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ok</button>
+            </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container-fluid">
+        
+
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container-fluid">
+            <a class="logo" href="#" title="ONGC">
+                <img style="float: left; padding-right: 15px" src="/favicon.ico">
+            </a>
+            <a class="navbar-brand" href="#">Action Plan 2024: Monitoring Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        
+            <div class="collapse navbar-collapse" id="navbarColor01">
+               <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                         <a class="nav-link" href="/index.html">
+                              <i class="bi-house-door"></i> Home
+                         </a>
+                    </li>
+                    </li>
+               </ul>
+                <!-- <form class="d-flex">
+                <input class="form-control me-sm-2" type="text" placeholder="Search">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+                </form> -->
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a id="mnu_username" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Welcome!</a>
+                        <div class="dropdown-menu">
+                            <!-- <a class="dropdown-item" href="#">Action</a>
+                            <a class="dropdown-item" href="#">Another action</a> -->
+                            <a class="dropdown-item" href="changepassword.html">Change Password</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" onclick="logout()">Log out</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            </div>
+        </nav>
+
+          <div class="row">
+               <div class="col-md-1"></div>
+               <div class="col-md-11">
+               <!-- Input table -->
+                    <table class="table table-hover">
+                         <tr>
+                              <td>
+                                   <div class="form-floating">
+                                        <select id="assetSelect" class="form-select">
+
+                                        </select>
+                                        <label for="assetSelect"><h6>Asset</h6></label>   
+                                   </div>
+                              </td>
+                              <td>
+                                   <div class="form-floating">
+                                        <select id="category" class="form-select">
+                                             <option>Actual</option>
+                                             <option>Plan</option>
+                                        </select>
+                                        <label for="category"><h6>Category</h6></label>   
+                                   </div>
+                              </td>
+                              <td>
+                                   <div class="form-floating">
+                                        <select class="form-select" id="financial_year" onchange="populateMonth()">
+                                             <option>2021-22</option>
+                                             <option>2022-23</option>
+                                             <option>2023-24</option>
+                                        </select><br/>
+                                        <label for="financial_year"><h6>Financial Year</h6></label>   
+                                   </div>
+                              </td>
+                              <td>
+                                   <div id="monthList" target="monthList" >
+               
+                                   </div>
+                              </td>
+                              <td>
+                                   <button class="btn btn-outline-primary float-left" onclick="addEntry()">Allow Entry</button>
+                              </td>
+                         </tr>
+                    </table>
+               </div>
+          </div>  
+          <div class="row">
+               <div class="col-md-2"></div>
+               <div class="col-md-8">
+                    <h2>Entry is presently allowed for:</h2>
+                    
+                    <table class="table table-hover">
+                         <thead>
+                         <tr>                   
+                              <th scope="col" width="20px"></th>
+                              <th scope="col">Asset</th>
+                              <th scope="col">Category</th>
+                              <th scope="col">Month / Year</th>
+                         </tr>
+                         </thead>
+                         <tbody id="dataEntryAllowed">
+                         
+                         </tbody>
+                    </table>
+               </div>
+          </div>
+        
+
+
+    </div>
+
+    <div class="spacer"></div>
+
+</div>
+<footer class="footer mt-auto py-3 bg-light">
+    <div class="container-fluid">
+        <span class="text-muted">Developed & Maintained by EPINET.</span>
+    </div>
+</footer>
+    <style>
+          .month {
+            cursor: pointer;
+            user-select: none;
+            margin-right: 4px;
+          }
+
+        .footer {
+            z-index: -1;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .remove_button{
+          cursor: pointer;
+        }
+    </style>
+    
+    <script src="javascripts/common.js"></script>
+    <script>
+        window.onload = function() {
+            g_init();
+        };
+        
+        function g_init(){
+            //Checks session and sets display of options accordingly
+            checkSession()
+            .then(response => {
+                console.log(response);
+                if(response == "logged in"){
+                    //Show username
+                    document.querySelector('#mnu_username').innerHTML = "Welcome "+ g_user.name;            
+                    populateMonth();
+                    populateAssets("ONSHORE");
+                    getDataEntryList();
+
+                    //Choose menu to display based on user type
+                    if(g_user.usertype.toLowerCase() != "admin"){
+                         window.location.href = 'index.html';
+                    }
+                }
+                else{
+                    window.location.href = 'index.html';
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+        }
+        
+        function showModal(title,message){
+
+            x = new bootstrap.Modal(document.getElementById('message-modal'));
+            x.show();
+            document.getElementById('modal_title').innerHTML = title;
+            document.getElementById('modal_message').innerHTML = message;
+        }   
+
+
+     function populateMonth() {
+
+               let months = [];
+               let year = document.querySelector("#financial_year").value.split('-')[1] - 1;
+               let monYear = new Date("01 Apr " + year);
+               let monthListDom = document.getElementById('monthList');
+               monthListDom.innerHTML = "";
+
+               for (let i = 0; i < 12; i++) {
+                    if(i%6 == 0){
+                         let linebreak = document.createElement('div');
+                         // linebreak.setAttribute("style","padding-top: 5px");
+                         monthListDom.append(linebreak);
+                    }
+                         
+
+                    months.push(
+                         monYear.toLocaleDateString('en-gb', { month: 'short' }).substring(0, 3)
+                         + "-" +
+                         monYear.toLocaleDateString('en-gb', { year: '2-digit' })
+                    );
+                    monYear.setMonth(monYear.getMonth() + 1); //https://stackoverflow.com/a/5645126/5746368
+
+                    let span = document.createElement('span');
+                    span.innerHTML = months[i];
+                    span.classList = "col month badge bg-light";
+                    span.draggable = true;
+                    monthListDom.appendChild(span);
+
+                    
+               }
+
+               let elements = document.getElementsByClassName("month badge");
+               let monthToggle = function () {
+                    this.classList.toggle('bg-light');
+                    this.classList.toggle('bg-success');
+               };
+               for (let i = 0; i < elements.length; i++) {
+                    elements[i].addEventListener('click', monthToggle, false);
+                    elements[i].addEventListener('dragenter', monthToggle, false);
+               }
+          }
+
+     function populateAssets(shore) {
+          //Field List
+          let assetList = [...new Set(
+                              g_user.field_list
+                                   .filter(x => x["ASSET_TYPE"]==shore)
+                                   .map(x=>x["ASSET_NAME"]+"~"+x["ASSET_ID"])
+                         )]; //Get unique list of assets with asset id
+          
+          let assetListDom = document.getElementById('assetSelect');
+          assetListDom.innerHTML = `<option value=0>All Assets</option>`;
+          for (let i = 0; i < assetList.length; i++) {
+               // //https://stackoverflow.com/a/8674667/5746368
+               // let span = document.createElement('span');
+               let tmp = assetList[i].split("~");
+               let asset_name = tmp[0]; // Asset Name
+               let asset_id = tmp[1]; // Asset ID
+               // span.classList = "asset badge bg-light";
+               // span.draggable = true;
+               // assetListDom.appendChild(span);
+               assetListDom.innerHTML += `<option value=${asset_id}>${asset_name}</option>`;
+          }
+          return;
+
+          var elements = document.getElementsByClassName("asset badge");
+          var assetToggle = function () {
+               this.classList.toggle('bg-light');
+               this.classList.toggle('bg-success');
+               populateFields();
+          };
+          for (var i = 0; i < elements.length; i++) {
+               elements[i].addEventListener('click', assetToggle, false);
+               elements[i].addEventListener('dragenter', assetToggle, false);
+          }
+     }
+    
+     function getDataEntryList(){
+
+          let uri = "/admin/read-permission";
+
+          fetch(encodeURI(uri),{
+               headers: { "Content-Type": "application/json" },
+               method: "POST"
+          })
+          .then( response => {
+               return response.json();
+          })
+          .then( response => {
+               console.log(response.data.length + " records fetched");
+               let permissions = response.data;
+
+               if(permissions.length>0){
+                    let tmpHtml = "";                    
+                    for (let i = 0; i < permissions.length; i++) {
+                         tmpHtml += `<tr>                              
+                              <td>
+                                   <i onclick="deleteEntry(${permissions[i][0]} ,'${permissions[i][1]}','${permissions[i][2]}')" class='bi bi-x-circle-fill remove_button'></i>
+                              </td>
+                              <td>
+                                   ${permissions[i][3]}
+                              </td>
+                              <td>
+                                   ${permissions[i][1]}
+                              </td>
+                              <td>
+                                   ${permissions[i][2]}
+                              </td>
+                         </tr>`;
+                    }
+                    document.getElementById('dataEntryAllowed').innerHTML = tmpHtml;
+               }
+               else{
+                    document.getElementById('dataEntryAllowed').innerHTML = "";                    
+               }
+          })
+          .catch((error) => {
+               alert(error);
+          });
+     }
+
+     function addEntry(){
+          let uri = "/admin/enable-data-entry";
+
+          let data = [];
+          let selectedMonthsDom = document.getElementsByClassName("month badge bg-success");
+          for (let index = 0; index < selectedMonthsDom.length; index++) {
+               data.push ({
+                    ASSET_ID: document.getElementById('assetSelect').value,
+                    ASSET_ID: document.getElementById('assetSelect').value,
+                    CATEGORY: document.getElementById('category').value,
+                    MONTH_YEAR: selectedMonthsDom.item(index).innerText.trim()
+               });
+          }
+
+          fetch(encodeURI(uri),{
+               headers: { "Content-Type": "application/json" },
+               method: "POST",
+               body: JSON.stringify({
+                    data: data
+               })
+          })
+          .then( response => {
+               return response.json();
+          })
+          .then( response => {
+               console.log(response.data);
+               setTimeout(() => {
+                    getDataEntryList();
+               }, 300);
+          })
+          .catch((error) => {
+               alert(error);
+          });
+     }
+    
+     function deleteEntry(asset_id,category,month_year){
+          let uri = "/admin/disable-data-entry";
+
+          let data = [];
+          let selectedMonthsDom = document.getElementsByClassName("month badge bg-success");
+          // for (let index = 0; index < selectedMonthsDom.length; index++) {
+          data.push ({
+               ASSET_ID: asset_id, //document.getElementById('assetSelect').value,
+               CATEGORY: category, //document.getElementById('category').value,
+               MONTH_YEAR: month_year //selectedMonthsDom.item(index).innerText.trim()
+          });
+          // }
+
+          fetch(encodeURI(uri),{
+               headers: { "Content-Type": "application/json" },
+               method: "POST",
+               body: JSON.stringify({
+                    data: data
+               })
+          })
+          .then( response => {
+               return response.json();
+          })
+          .then( response => {
+               console.log(response.data);
+               setTimeout(() => {
+                    getDataEntryList();
+               }, 300);
+          })
+          .catch((error) => {
+               alert(error);
+          });
+     }
+    
+    </script>
+    
+</body>
+</html>
