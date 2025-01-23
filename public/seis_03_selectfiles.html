@@ -34,35 +34,90 @@
     <div style="height: 50px;"></div>
     <div class="container">
         <div class="row">
-            <div class="col-7">
+            <div class="col-4">
+                <div class="row"><div class="input-group input-group-sm mb-3">
+                    <span class="input-group-text">Path</span>
+                    <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" id="g-current-path" >
+                    <button class="btn btn-secondary" type="button" id="button-addon2" onclick='getDirectoryListing(document.getElementById("g-current-path").value)'>Go</button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
                 <div id="w2grd_file_selection"></div>
             </div>
-            <div class="col-5">
+            <div class="col">
                 <div id="w2grid_files_for_loading" style="height: 350px;"></div>
             </div>
         </div>
         <div class="row">
-            <div class="col-2">
-                <button type="button" class="btn btn-primary" onclick="proceedForLoading()">Proceed for loading</button>
+            <div class="col-4">
+                <button type="button" class="btn btn-primary" onclick="proceedForQC()">Proceed for QC / Edit / Load</button>
             </div>
         </div>
     </div>
 
 
     <script>
+        var g_serverURL="";
         var g_mode = "file_select";
+        var g_currentPath;
 
         //Check if anything is passed. If not, default to file selection
 
-        function proceedForLoading(){
+        function proceedForQC(){
             window.location.href="seis_04_qc.html";
+        }        
+
+        function getDirectoryListing(path){
+            if (path == null) path = '/stage/alok/Data/MR/PSS_DATA';
+            w2ui.file_folder_listing.lock("Loading...",true);
+            fetch(`${g_serverURL}/?dir=${path}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+
+                //Clear grid before parsing and displaying new listing
+                let folder_list = [];
+                let file_list = [];
+                w2ui.file_folder_listing.clear();
+
+                //Update current path global variable
+                g_currentPath = data.current_directory;
+                document.getElementById("g-current-path").value = g_currentPath;
+
+                // Add folders
+                let folderCount = data.subdirectories.length;
+                let folderNameOffset = g_currentPath == "/" ? 0 : g_currentPath.length;
+                for (let i = 0; i < folderCount; i++) {
+                    const foldername = data.subdirectories[i].substring(folderNameOffset);                    
+                    folder_list.push({recid: i, file_name: foldername, file_size: '', modified: '', created: '', type: 'folder'});
+                }
+
+                // Add files
+                let filecount = data.files.length;
+                for (let i = 0; i < filecount; i++) {
+                    const filepath = data.files[i];
+                    const filename = filepath.substring(filepath.lastIndexOf('/')+1);
+                    file_list.push({recid: folderCount + i, file_name: filename, file_size: '', modified: '', created: ''});
+                }
+                
+                w2ui.file_folder_listing.add(folder_list);
+                w2ui.file_folder_listing.add(file_list);
+
+                w2ui.file_folder_listing.unlock();
+            });
         }
         
+        document.getElementById("g-current-path").addEventListener('keydown', function(event) {
+        // Check if the pressed key is 'Enter' (key code 13)
+            if (event.key === 'Enter') {
+                // Prevent the default form submission behavior (if applicable)
+                event.preventDefault();
 
-
-        
-
-
+                getDirectoryListing(document.getElementById("g-current-path").value)
+            }
+        });
 
         //File listing
         let file_folder_listing = new w2grid({
@@ -77,69 +132,43 @@
                 // lineNumbers: true
             },
             columns: [
-                { field: 'file_name', text: 'File Name', size: '30%' },
+                { field: 'file_name', text: 'File Name', size: '30%',
+                    render(record, extra) {
+                        if (record.type === 'folder') {
+                            return `<i class="bi bi-folder-fill"></i> ${record.file_name}`;
+                        }
+                        return extra.value;
+                    }
+                 },
                 { field: 'file_size', text: 'Size', size: '30%' },
                 { field: 'modified', text: 'Last Modified', size: '40%' },
                 { field: 'created', text: 'Created', size: '90px' }
             ],
             records: [                
-                {
-                    recid: 2, file_name: 'CY2021', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012',
-                    w2ui: {
-                        children: [
-                            { recid: 21, file_name: 'test1.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                            {
-                                recid: 22, file_name: 'test2.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012',
-                                w2ui: {
-                                    children: [
-                                        { recid: 221, file_name: 'test3.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                                        {
-                                            recid: 222, file_name: 'test4.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012',
-                                            w2ui: {
-                                                children: [
-                                                    { recid: 2221, file_name: 'test5.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                                                    { recid: 2222, file_name: 'test6.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' },
-                                                    { recid: 2223, file_name: 'test7.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                                                    { recid: 2224, file_name: 'test8.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' }
-                                                ]
-                                            }
-                                        },
-                                        { recid: 223, file_name: 'test9.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                                        { recid: 224, file_name: 'test10.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' }
-                                    ]
-                                }
-                            },
-                            { recid: 23, file_name: 'test11.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                            { recid: 24, file_name: 'test12.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' }
-                        ]
-                    }
-                },
-                {
-                    recid: 3, file_name: 'KGPG', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012',
-                    w2ui: {
-                        children: [
-                            { recid: 11, file_name: 'pstm.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                            { recid: 12, file_name: 'psdm.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' },
-                            { recid: 13, file_name: 'test.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                            { recid: 14, file_name: 'another.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' }
-                        ]
-                    }
-                },
-                { recid: 1, file_name: 'CY2019_PSTM.sgy', file_size: '150 GB', modified: '4/9/2012', created: '4/3/2012', w2ui: { children: [] } }
+                {recid: 2, file_name: 'CY2021', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012', type: 'folder'},
+                {recid: 3, file_name: 'CY2021_A', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012'},
+                {recid: 4, file_name: 'CY2021_B', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012'}
             ],
             toolbar: {
                 items: [
-                    { type: 'button', id: 'add_files', text: 'Add Files', icon: 'bi bi-arrow-right-square' }
+                    { type: 'button', id: 'move_up', text: 'Up', icon: 'bi bi-arrow-90deg-up' },
                     // { type: 'break' },
+                    { type: 'button', id: 'add_files', text: 'Add Files', icon: 'bi bi-arrow-right-square' }
                     // { type: 'button', id: 'done', text: 'Proceed to load data', icon: 'bi bi-arrow-right-square' },
                 ],
                 onClick: function (target, data) {
                     switch (target) {
+                        case "move_up":
+                            if(g_currentPath == "/") return;
+                            let newpath = g_currentPath.substring(0,g_currentPath.lastIndexOf('/'));
+                            getDirectoryListing(newpath);
+                            break;    
                         case "add_files":
                             let selected_files = w2ui.file_folder_listing.getSelection();
                             let num_selected_files = selected_files.length;
                             if(num_selected_files == 0) {alert ("No file selected"); return;}
                             for (let i = 0; i < num_selected_files; i++) {
+                                if(w2ui.file_folder_listing.get(selected_files[i]).type == "folder") continue;
                                 w2ui.file_load_list.add(
                                 {
                                     recid: selected_files[i], 
@@ -159,6 +188,12 @@
                 console.log(this);
                 
 
+            },
+            onDblClick: function(event) {
+                console.log(event.detail.recid);
+                let clicked_record = w2ui.file_folder_listing.records[event.detail.recid];
+                if(clicked_record.type == "folder" && g_currentPath == "/") getDirectoryListing(g_currentPath + clicked_record.file_name);
+                if(clicked_record.type == "folder") getDirectoryListing(g_currentPath + "/" + clicked_record.file_name);
             }
         })
 
@@ -200,22 +235,24 @@
             ]
         })
 
-        let w2tab_headers = new w2tabs({
-            box: '#w2tab_headers',
-            name: 'tabs',
-            active: 'tab1',
-            tabs: [
-                { id: 'tab1', text: 'EBCDIC Header' },
-                { id: 'tab2', text: 'Binary Header' },
-                { id: 'tab3', text: 'Trace Headers' }
-            ],
-            onClick(event) {
-                document.querySelectorAll(".tab-content").forEach(x=>x.setAttribute("style","display:none"));
-                document.querySelector(`#${event.target}`).setAttribute("style","");
-            }
-        })
+        // let w2tab_headers = new w2tabs({
+        //     box: '#w2tab_headers',
+        //     name: 'tabs',
+        //     active: 'tab1',
+        //     tabs: [
+        //         { id: 'tab1', text: 'EBCDIC Header' },
+        //         { id: 'tab2', text: 'Binary Header' },
+        //         { id: 'tab3', text: 'Trace Headers' }
+        //     ],
+        //     onClick(event) {
+        //         document.querySelectorAll(".tab-content").forEach(x=>x.setAttribute("style","display:none"));
+        //         document.querySelector(`#${event.target}`).setAttribute("style","");
+        //     }
+        // })
         
         // change_page_mode("file_select");
+
+        getDirectoryListing();
 
     </script>
 </body>
