@@ -61,113 +61,10 @@
         var g_mode = "file_select";
 
         //Check if anything is passed. If not, default to file selection
-
-
         
 
-
         
-
-
-
-        //File listing
-        let file_folder_listing = new w2grid({
-            name: 'file_folder_listing',
-            box: '#w2grd_file_selection',
-            header: '<b>Select Files from Staging Area</>',
-            show: {
-                header: true,
-                // footer: true,
-                toolbar: true,
-                // toolbarAdd: true,
-                // lineNumbers: true
-            },
-            columns: [
-                { field: 'file_name', text: 'File Name', size: '30%' },
-                { field: 'file_size', text: 'Size', size: '30%' },
-                { field: 'modified', text: 'Last Modified', size: '40%' },
-                { field: 'created', text: 'Created', size: '90px' }
-            ],
-            records: [                
-                {
-                    recid: 2, file_name: 'CY2021', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012',
-                    w2ui: {
-                        children: [
-                            { recid: 21, file_name: 'test1.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                            {
-                                recid: 22, file_name: 'test2.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012',
-                                w2ui: {
-                                    children: [
-                                        { recid: 221, file_name: 'test3.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                                        {
-                                            recid: 222, file_name: 'test4.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012',
-                                            w2ui: {
-                                                children: [
-                                                    { recid: 2221, file_name: 'test5.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                                                    { recid: 2222, file_name: 'test6.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' },
-                                                    { recid: 2223, file_name: 'test7.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                                                    { recid: 2224, file_name: 'test8.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' }
-                                                ]
-                                            }
-                                        },
-                                        { recid: 223, file_name: 'test9.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                                        { recid: 224, file_name: 'test10.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' }
-                                    ]
-                                }
-                            },
-                            { recid: 23, file_name: 'test11.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                            { recid: 24, file_name: 'test12.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' }
-                        ]
-                    }
-                },
-                {
-                    recid: 3, file_name: 'KGPG', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012',
-                    w2ui: {
-                        children: [
-                            { recid: 11, file_name: 'pstm.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                            { recid: 12, file_name: 'psdm.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' },
-                            { recid: 13, file_name: 'test.sgy', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012' },
-                            { recid: 14, file_name: 'another.sgy', file_size: '40 GB', modified: '4/9/2012', created: '4/3/2012' }
-                        ]
-                    }
-                },
-                { recid: 1, file_name: 'CY2019_PSTM.sgy', file_size: '150 GB', modified: '4/9/2012', created: '4/3/2012', w2ui: { children: [] } }
-            ],
-            toolbar: {
-                items: [
-                    { type: 'button', id: 'add_files', text: 'Add Files', icon: 'bi bi-arrow-right-square' }
-                    // { type: 'break' },
-                    // { type: 'button', id: 'done', text: 'Proceed to load data', icon: 'bi bi-arrow-right-square' },
-                ],
-                onClick: function (target, data) {
-                    switch (target) {
-                        case "add_files":
-                            let selected_files = w2ui.file_folder_listing.getSelection();
-                            let num_selected_files = selected_files.length;
-                            if(num_selected_files == 0) {alert ("No file selected"); return;}
-                            for (let i = 0; i < num_selected_files; i++) {
-                                w2ui.file_load_list.add(
-                                {
-                                    recid: selected_files[i], 
-                                    file_name: w2ui.file_folder_listing.get(selected_files[i]).file_name
-                                });
-                            }
-                            
-                            break;                    
-                        default: //Proceed to Load Data
-                            change_page_mode("load_seismic");                            
-                            break;
-                    }
-                }
-            },
-            onAdd: function(event){
-                console.log(event.target);
-                console.log(this);
-                
-
-            }
-        })
-
+ 
         // widget configuration
         let file_load_list = new w2grid({
             name: 'file_load_list',
@@ -196,7 +93,8 @@
             // }],
             method: 'GET', // need this to avoid 412 error on Safari
             columns: [
-                { field: 'file_name', text: 'File Name', size: '60%' },
+                { field: 'file_name', text: 'File Name', size: '40%' },
+                { field: 'file_path', text: 'Path', size: '60%' },
                 // { field: 'crs', text: 'Spheroid', size: '30%', editable: { type: 'text' } },
                 // { field: 'survey', text: 'Survey Name', size: '30%' },
                 // { field: 'stage', text: 'Stage', size: '40%' },
@@ -222,6 +120,17 @@
         })
         
         // change_page_mode("file_select");
+
+        // Read selected file list from localstorage and add to file listing
+        try {
+            const g_files = JSON.parse(localStorage.getItem('files'));
+            console.log(g_files);
+            w2ui.file_load_list.add(g_files);
+        } catch (error) {
+            
+        }
+        
+
 
     </script>
 </body>

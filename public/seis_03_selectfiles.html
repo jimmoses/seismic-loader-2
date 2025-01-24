@@ -38,7 +38,7 @@
                 <div class="row"><div class="input-group input-group-sm mb-3">
                     <span class="input-group-text">Path</span>
                     <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" id="g-current-path" >
-                    <button class="btn btn-secondary" type="button" id="button-addon2" onclick='getDirectoryListing(document.getElementById("g-current-path").value)'>Go</button>
+                    <button class="btn btn-secondary" type="button" onclick='getDirectoryListing(document.getElementById("g-current-path").value)'>Go</button>
                 </div>
             </div>
         </div>
@@ -65,10 +65,7 @@
 
         //Check if anything is passed. If not, default to file selection
 
-        function proceedForQC(){
-            window.location.href="seis_04_qc.html";
-        }        
-
+        // Function to get directory list, separate files & folders and display them
         function getDirectoryListing(path){
             if (path == null) path = '/stage/alok/Data/MR/PSS_DATA';
             w2ui.file_folder_listing.lock("Loading...",true);
@@ -106,9 +103,14 @@
                 w2ui.file_folder_listing.add(file_list);
 
                 w2ui.file_folder_listing.unlock();
+            })
+            .catch((error) => {
+                console.log(error);
+                w2ui.file_folder_listing.lock("Error reading files from server<br><br><a href='seis_03_selectfiles.html'>Reload</a>");
             });
         }
         
+        //When Enter is pressed on the path input box, go to that path
         document.getElementById("g-current-path").addEventListener('keydown', function(event) {
         // Check if the pressed key is 'Enter' (key code 13)
             if (event.key === 'Enter') {
@@ -119,7 +121,8 @@
             }
         });
 
-        //File listing
+        //////////////////////////////////////////////////////////
+        // File Browser grid
         let file_folder_listing = new w2grid({
             name: 'file_folder_listing',
             box: '#w2grd_file_selection',
@@ -144,11 +147,11 @@
                 { field: 'modified', text: 'Last Modified', size: '40%' },
                 { field: 'created', text: 'Created', size: '90px' }
             ],
-            records: [                
-                {recid: 2, file_name: 'CY2021', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012', type: 'folder'},
-                {recid: 3, file_name: 'CY2021_A', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012'},
-                {recid: 4, file_name: 'CY2021_B', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012'}
-            ],
+            // records: [                
+            //     {recid: 2, file_name: 'CY2021', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012', type: 'folder'},
+            //     {recid: 3, file_name: 'CY2021_A', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012'},
+            //     {recid: 4, file_name: 'CY2021_B', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012'}
+            // ],
             toolbar: {
                 items: [
                     { type: 'button', id: 'move_up', text: 'Up', icon: 'bi bi-arrow-90deg-up' },
@@ -172,7 +175,8 @@
                                 w2ui.file_load_list.add(
                                 {
                                     recid: selected_files[i], 
-                                    file_name: w2ui.file_folder_listing.get(selected_files[i]).file_name
+                                    file_name: w2ui.file_folder_listing.get(selected_files[i]).file_name,
+                                    file_path: g_currentPath
                                 });
                             }
                             
@@ -197,7 +201,8 @@
             }
         })
 
-        // widget configuration
+        //////////////////////////////////////////////////////////
+        // Selected File Grid
         let file_load_list = new w2grid({
             name: 'file_load_list',
             box: '#w2grid_files_for_loading',
@@ -225,7 +230,8 @@
             // }],
             method: 'GET', // need this to avoid 412 error on Safari
             columns: [
-                { field: 'file_name', text: 'File Name', size: '60%' },
+                { field: 'file_name', text: 'File Name', size: '40%' },
+                { field: 'file_path', text: 'Path', size: '60%' },
                 // { field: 'crs', text: 'Spheroid', size: '30%', editable: { type: 'text' } },
                 // { field: 'survey', text: 'Survey Name', size: '30%' },
                 // { field: 'stage', text: 'Stage', size: '40%' },
@@ -235,23 +241,20 @@
             ]
         })
 
-        // let w2tab_headers = new w2tabs({
-        //     box: '#w2tab_headers',
-        //     name: 'tabs',
-        //     active: 'tab1',
-        //     tabs: [
-        //         { id: 'tab1', text: 'EBCDIC Header' },
-        //         { id: 'tab2', text: 'Binary Header' },
-        //         { id: 'tab3', text: 'Trace Headers' }
-        //     ],
-        //     onClick(event) {
-        //         document.querySelectorAll(".tab-content").forEach(x=>x.setAttribute("style","display:none"));
-        //         document.querySelector(`#${event.target}`).setAttribute("style","");
-        //     }
-        // })
         
-        // change_page_mode("file_select");
+        function proceedForQC(){
+            if (w2ui.file_load_list.records.length == 0){
+                alert ("No files added!");
+                return;
+            }
 
+            //Add to localstorage and open QC/Edit page
+            localStorage.setItem('files', JSON.stringify(w2ui.file_load_list.records));
+            window.location.href="seis_04_qc.html";
+        }        
+
+
+        //To start with
         getDirectoryListing();
 
     </script>

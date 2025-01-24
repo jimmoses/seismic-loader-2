@@ -1,3 +1,7 @@
+#Custom
+public/archive/*
+
+
 # Logs
 logs
 *.log
