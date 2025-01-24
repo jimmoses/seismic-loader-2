@@ -23,46 +23,38 @@
         margin: 0px 20px 20px 0px;
         transition: 0.7s ease-out;
     }
-    #div_header_tabs{
-        margin: 0px 150px 20px 150px;
-    }
+    
 </style>
 
 <body>
     <div style="height: 180px;"></div>
     <div class="container">
         <div class="row">
-            <div class="col-5">
+            <div class="col">
                 <div id="w2grid_files_for_loading" style="height: 350px;"></div>
             </div>
-        </div>
-    </div>
-    <div class="row">
-        <div id="div_loader">
-            
-            <div id="div_header_tabs">
-                <div id="w2tab_headers" style="margin-bottom: 20px;"></div>            
+        </div>    
+        <div class="row">
+            <div class="col">
+                <div id="w2tab_headers" style="margin-bottom: 20px;"></div>
                 <div id="tab1" class="tab-content">
                     First tab.
                 </div>
                 <div id="tab2" class="tab-content">
-                    Second tab, with some HTML in it. :)
+                    
                 </div>
-                <div id="tab3" class="tab-content">
-                    What did you expect, of course it is the third tab.
+                <div id="tab3" class="tab-content">                        
+                    
                 </div>
             </div>
-            
         </div>
     </div>
 
-
     <script>
         var g_mode = "file_select";
+        const g_apiUrl = '';
 
         //Check if anything is passed. If not, default to file selection
-        
-
         
  
         // widget configuration
@@ -113,13 +105,22 @@
                 { id: 'tab2', text: 'Binary Header' },
                 { id: 'tab3', text: 'Trace Headers' }
             ],
-            onClick(event) {
+            onClick: async function (event) {
                 document.querySelectorAll(".tab-content").forEach(x=>x.setAttribute("style","display:none"));
                 document.querySelector(`#${event.target}`).setAttribute("style","");
+
+                console.log (event.target);
+                switch (event.target) {
+                    case "tab1":                        
+                        let header_content = await call("ebc-hdr");
+                        document.querySelector(`#${event.target}`).innerHTML = header_content;
+                        break;
+                
+                    default:
+                        break;
+                }
             }
-        })
-        
-        // change_page_mode("file_select");
+        });
 
         // Read selected file list from localstorage and add to file listing
         try {
@@ -130,7 +131,56 @@
             
         }
         
+        //Wrapper function to make API call to server
+        async function call (api_request,target){
+            let apiUrl, trace_no = 0, file_type = "3D";
+            switch (api_request) {
+                case "ebc-hdr":
+                case "EBCDIC-header":
+                    apiUrl = g_apiUrl + "get_ebc_hdr";
+                    break;
+                case "bin-hdr":
+                case "binary-header":
+                    apiUrl = g_apiUrl + "get_bin_hdr";
+                    break;
+                case "trc-hdr":
+                case "trace-header":
+                    apiUrl = g_apiUrl + "get_trc_hdr";
+                    break;            
+                case "qc-log":                
+                    apiUrl = g_apiUrl + "qc_log";
+                    break;            
+                default:
+                    break;
+            }
 
+            // Get select file with path
+            let selectedRecord = w2ui.file_load_list.get(w2ui.file_load_list.getSelection()[0]);
+            
+            // Prepare POST request with file path and file type
+            const formData = new FormData();
+            formData.append('file_path', selectedRecord.file_path + "/" + selectedRecord.file_name);
+            formData.append('traceno', trace_no);
+            // formData.append('file_type', file_type);
+
+            return fetch(apiUrl, {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                return data;
+            })
+            .catch(error => {
+                console.error('Error fetching SEGY data:', error);                
+            });
+        }
 
     </script>
 </body>
