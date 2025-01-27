@@ -118,12 +118,13 @@
                         break;
                     case "div_bin_hdr":                        
                         content = await call("bin-hdr");
-                        console.table(content);
-                        document.querySelector(`#${event.target}`).innerHTML = "<table class='table'>" + Object.entries(content).map(x=> "<tr><td>" + x.join("</td><td>") + "<td></tr>").join("") + "</table>";
+                        // console.table(content);
+                        document.querySelector(`#${event.target}`).innerHTML = "<table class='table'>" + Object.entries(content).map(x=> "<tr><td>" + x.join("</td><td>") + "</td></tr>").join("") + "</table>";                        
                         break;
                     case "div_trc_hdr":                        
                         content = await call("trc-hdr");
-                        document.querySelector(`#${event.target}`).innerHTML = content.split("\n").join("<br>");
+                        // console.log(content);
+                        document.querySelector(`#${event.target}`).innerHTML = "<table class='table'>" + Object.entries(content).map(x=> "<tr><td>" + x[0] + "</td><td>" + Object.values(x[1]) + "</td></tr>").join("") + "</table>";
                         break;
                 
                     default:
@@ -143,7 +144,7 @@
         
         //Wrapper function to make API call to server
         async function call (api_request,target){
-            let apiUrl, trace_no = 0, file_type = "3D";
+            let apiUrl, trace_no = 1, file_type = "3D";
             switch (api_request) {
                 case "ebc-hdr":
                 case "EBCDIC-header":
