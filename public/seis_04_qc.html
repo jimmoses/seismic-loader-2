@@ -37,13 +37,13 @@
         <div class="row">
             <div class="col">
                 <div id="w2tab_headers" style="margin-bottom: 20px;"></div>
-                <div id="tab1" class="tab-content">
-                    First tab.
-                </div>
-                <div id="tab2" class="tab-content">
+                <div id="div_ebc_hdr" class="tab-content" style="display: none;">
                     
                 </div>
-                <div id="tab3" class="tab-content">                        
+                <div id="div_bin_hdr" class="tab-content" style="display: none;">
+                    
+                </div>
+                <div id="div_trc_hdr" class="tab-content" style="display: none;">                        
                     
                 </div>
             </div>
@@ -99,21 +99,31 @@
         let w2tab_headers = new w2tabs({
             box: '#w2tab_headers',
             name: 'tabs',
-            active: 'tab1',
             tabs: [
-                { id: 'tab1', text: 'EBCDIC Header' },
-                { id: 'tab2', text: 'Binary Header' },
-                { id: 'tab3', text: 'Trace Headers' }
+                { id: 'div_ebc_hdr', text: 'EBCDIC Header' },
+                { id: 'div_bin_hdr', text: 'Binary Header' },
+                { id: 'div_trc_hdr', text: 'Trace Headers' }
             ],
             onClick: async function (event) {
+                console.log(event.target);
                 document.querySelectorAll(".tab-content").forEach(x=>x.setAttribute("style","display:none"));
                 document.querySelector(`#${event.target}`).setAttribute("style","");
+                let content;
 
                 console.log (event.target);
                 switch (event.target) {
-                    case "tab1":                        
-                        let header_content = await call("ebc-hdr");
-                        document.querySelector(`#${event.target}`).innerHTML = header_content;
+                    case "div_ebc_hdr":                        
+                        content = await call("ebc-hdr");
+                        document.querySelector(`#${event.target}`).innerHTML = content.split("\n").join("<br>");
+                        break;
+                    case "div_bin_hdr":                        
+                        content = await call("bin-hdr");
+                        console.table(content);
+                        document.querySelector(`#${event.target}`).innerHTML = "<table class='table'>" + Object.entries(content).map(x=> "<tr><td>" + x.join("</td><td>") + "<td></tr>").join("") + "</table>";
+                        break;
+                    case "div_trc_hdr":                        
+                        content = await call("trc-hdr");
+                        document.querySelector(`#${event.target}`).innerHTML = content.split("\n").join("<br>");
                         break;
                 
                     default:
@@ -128,7 +138,7 @@
             console.log(g_files);
             w2ui.file_load_list.add(g_files);
         } catch (error) {
-            
+            alert("No files were selected!");
         }
         
         //Wrapper function to make API call to server
@@ -174,7 +184,6 @@
                 return response.json();
             })
             .then(data => {
-                console.log(data);
                 return data;
             })
             .catch(error => {
