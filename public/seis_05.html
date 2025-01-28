@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>EDS</title>
+        <script src="./lib/w2ui/w2ui-2.0.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="./lib/w2ui/w2ui-2.0.min.css">
+        <!-- <link rel="stylesheet" type="text/css" href="./lib/bootstrap-icons.min.css"> -->
+    
+        <link href="./stylesheets/bootstrap.min.css" rel="stylesheet">
+        <link href="./stylesheets/css2.css" rel="stylesheet">
+        <link href="./lib/bootstrap-icons.css" rel="stylesheet">
+        <script src="./lib/bootstrap.bundle.min.js"></script>
+    </head>
+    <body>
+        <div style="height: 40px;"></div>
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <div id="w2frm_create_job" style="height: 540px;"></div>
+                </div>                
+            </div>    
+            <div style="height: 20px;"></div>
+            <div class="row">
+                <div class="col">                    
+                    <div id="dataset_input" style="display: inline-block; width: 100%; height: 300px;"></div>                    
+                </div>
+                <div class="col">                    
+                    <div id="dataset_existing" style="display: inline-block; width: 100%; height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+        
+    </body>
+    <script>
+        const g_apiUrl = 'http://10.203.10.230:8000/';
+
+        let people = [
+            { id: 1, text: 'Adams, John' },
+            { id: 2, text: 'Johnson, Peter' },
+            { id: 3, text: 'Lewis, Frank' },
+            { id: 4, text: 'Cruz, Steve' },
+            { id: 5, text: 'Donnun, Nick' }
+        ];
+
+        let w2frm_createjob = new w2form({
+            box: '#w2frm_create_job',
+            name: 'seis_form',
+            header: 'Create Job',
+            // record: {
+            //     simple: {
+            //         text: 'default text value',
+            //         alpha: 'ABC123',
+            //         int: null,
+            //         float: 0
+            //     },
+            //     single: {
+            //         check: true,
+            //         toggle: true
+            //     },
+            //     list: 3,
+            //     enum: [1, 4]
+            // },
+            fields: [
+                { field: 'datastore_id', type: 'list',
+                    html: { span: 10, column: 0, group: 'Datastore', label: 'Datastore (ID)', attr: 'style = "width:40%"'},
+                    options: { items: 
+                        [
+                            {id: 1, text: "one"},
+                            {id: 2, text: "two"},
+                            {id: 3, text: "three"},
+                            {id: 4, text: "four"}
+                        ]
+                    }
+                },
+                { field: 'application_project_id', type: 'list',
+                    html: { span: 10, column: 0, label: 'Application Project (ID)', attr: 'style = "width:40%"'},
+                    options: { items: ['one','twp'] }
+                },
+                { field: 'seismic_survey_id', type: 'list',
+                    html: { span: 10, column: 0, group: 'Survey', label: 'Seismic Survey (ID)', attr: 'style = "width:40%"'},
+                    options: { items: ['one','twp'] }
+                },
+                { field: 'survey_remarks', type: 'text', disabled: true,
+                    html: { span: 10, column: 0, label: 'Survey Remarks', attr: 'style = "width:40%"'},
+                    options: { items: ['one','twp'] }
+                },
+                { field: 'crs', type: 'text', disabled: true,
+                    html: { span: 10, column: 0, label: 'CRS Name (Code)', attr: 'style = "width:40%"'},
+                    options: { items: ['one','twp'] }
+                },
+                { field: 'output_location', type: 'list',
+                    html: { span: 10, column: 0, label: 'Output Location' , attr: 'style = "width:40%"'},
+                    options: { items: ['one','twp'] }
+                },
+                { field: 'options', type: 'checks',
+                    html: { span: 5, label: '', group: 'Additional Options', column: 'after'},
+                    options: { items: [
+                        {id: 'do_not_copy', text: 'Use file as reference. Do not copy'},
+                        {id: 'overwrite_shape', text: 'Force overwrite Shape file'}
+                    ] }
+                }
+            ],
+            actions: {
+                // Reset() {
+                //     this.clear();
+                // },
+                // Save() {
+                //     if (form.validate().length == 0) {
+                //         w2popup.open({
+                //             title: 'Form Data',
+                //             // with: 600,
+                //             height: 550,
+                //             body: `<pre>${JSON.stringify(this.getCleanRecord(), null, 4)}</pre>`,
+                //             actions: { Ok: w2popup.close }
+                //         })
+                //     }
+                // },
+                // custom: {
+                //     text: '<span style="font-size: 16px">←</span> click to see data',
+                //     class: 'custom-class',
+                //     style: 'background-image: none; background-color: transparent; border: 0px; margin: 0 0 0 -10px;',
+                //     onClick() {
+                //         w2alert('Not me!! The other button')
+                //     }
+                // }
+            }
+        });
+
+
+        let grid = new w2grid({
+            name: 'dataset_input',
+            box: '#dataset_input',
+            header: 'Datasets to be loaded',
+            show: { header: true },
+            columns: [
+                { field: 'lname', text: 'Name', size: '30%', sortable: true },
+                { field: 'recid', text: 'ID', size: '80px', sortable: true},
+                { field: 'fname', text: 'Domain', size: '30%', sortable: true },
+                { field: 'email', text: 'Version', size: '40%' }
+            ],
+            records: [
+                // { recid: 1, fname: 'Jane', lname: 'Doe', email: 'jdoe@gmail.com', sdate: '4/3/2012' },
+                // { recid: 2, fname: 'Stuart', lname: 'Motzart', email: 'jdoe@gmail.com', sdate: '4/3/2012' },
+                // { recid: 3, fname: 'Jin', lname: 'Franson', email: 'jdoe@gmail.com', sdate: '4/3/2012' },
+                // { recid: 4, fname: 'Susan', lname: 'Ottie', email: 'jdoe@gmail.com', sdate: '4/3/2012' },
+                // { recid: 5, fname: 'Kelly', lname: 'Silver', email: 'jdoe@gmail.com', sdate: '4/3/2012' },
+                // { recid: 6, fname: 'Francis', lname: 'Gatos', email: 'jdoe@gmail.com', sdate: '4/3/2012' }
+            ],
+            onClick(event) {
+                // need timer for nicer visual effect that record was selected
+                setTimeout(() => {
+                    grid2.add(w2utils.extend({}, grid.get(event.detail.recid), { selected : false }) )
+                    grid.selectNone()
+                    grid.remove(event.detail.recid)
+                }, 150)
+            }
+        })
+
+        let grid2 = new w2grid({
+            name: 'dataset_existing',
+            box: '#dataset_existing',
+            header: 'Existing Datasets',
+            show: { header: true },
+            columns: [
+                { field: 'lname', text: 'Name', size: '30%', sortable: true },
+                { field: 'recid', text: 'ID', size: '80px', sortable: true},
+                { field: 'fname', text: 'Domain', size: '30%', sortable: true },
+                { field: 'email', text: 'Version', size: '40%' }
+            ],
+            onClick(event) {
+                // need timer for nicer visual effect that record was selected
+                setTimeout(() => {
+                    grid.add(w2utils.extend({}, grid2.get(event.detail.recid), { selected : false }))
+                    grid2.selectNone()
+                    grid2.remove(event.detail.recid)
+                }, 150)
+            }
+        })
+
+
+        function updateLOV(){
+            let apiUrl = g_apiUrl + 'fetch_db_values';
+
+            // Prepare POST request with file path and file type
+            const formData = new FormData();
+            formData.append('file_path', selectedRecord.file_path + "/" + selectedRecord.file_name);
+            // formData.append('traceno', trace_no);
+            formData.append('file_type', file_type);
+
+            fetch(apiUrl, {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                console.log(response);
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                return data;
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);                
+            });
+
+            w2frm_createjob.fields[2].w2field.options.items = [
+                            {id: 1, text: "one"},
+                            {id: 2, text: "two"},
+                            {id: 3, text: "three"},
+                            {id: 4, text: "four"}
+                        ];
+        }
+    </script>
+    </html>

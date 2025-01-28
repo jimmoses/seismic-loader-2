@@ -43,8 +43,28 @@
                 <div id="div_bin_hdr" class="tab-content" style="display: none;">
                     
                 </div>
-                <div id="div_trc_hdr" class="tab-content" style="display: none;">                        
-                    
+                <div id="div_trc_hdr" class="tab-content" style="display: none;">   
+                                         
+                    <div class="row">
+                        <div class="col-2">
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text" id="inputGroup-sizing-sm">Trace Number</span>
+                                <input id="trace_no" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" value="1">
+                            </div>
+                        </div>
+                        <div class="col-1">
+
+                        </div>
+                        <div class="col">
+                            <input id="trace_range" type="range" class="form-range" min="1" max="5" step="1" onchange="document.getElementById('trace_no').value = this.value; read_trace_header(this.value);">
+                        </div>
+                        <div class="col-1">
+
+                        </div>
+                    </div>
+                    <div id="table_trc_hdr">
+
+                    </div>
                 </div>
             </div>
         </div>
@@ -70,13 +90,25 @@
                 items: [
                     // { type: 'button', id: 'add_files', text: 'Add files from stage', icon: 'bi bi-plus-circle' },
                     // { type: 'break' },
-                    // { type: 'button', id: 'done', text: 'Proceed to load data', icon: 'bi bi-arrow-right-square' },
+                    { type: 'button', id: 'qc', text: 'QC', icon: 'bi bi-search' },
+                    { type: 'spacer' },
+                    { type: 'button', id: 'create_load_job', text: 'Create Load Job', icon: 'bi bi-arrow-right-square' }
                 ],
-                onClick: function (target, data) {
-                    change_page_mode("file_select");  
+                onClick: async function (target, data) {
+                    console.log(target,data);
+                    if (target == "qc"){
+                        let response = await call("qc-log");
+                        console.log(response);
+                        return;
+                    }
+                    if (target == "create_load_job"){
+                        localStorage.setItem('files_for_job', JSON.stringify(w2ui.file_load_list.getSelection()));
+                        window.location.href="seis_05.html";
+                        return;
+                    }
                 }
             },
-            header: '<b>Files Selected for Loading</>',
+            header: '<b>Seismic Data Loader - QC / Edit</>',
             // records: [{
             //     file_name: 'test',
             //     crs: 'test',
@@ -122,9 +154,7 @@
                         document.querySelector(`#${event.target}`).innerHTML = "<table class='table'>" + Object.entries(content).map(x=> "<tr><td>" + x.join("</td><td>") + "</td></tr>").join("") + "</table>";                        
                         break;
                     case "div_trc_hdr":                        
-                        content = await call("trc-hdr");
-                        // console.log(content);
-                        document.querySelector(`#${event.target}`).innerHTML = "<table class='table'>" + Object.entries(content).map(x=> "<tr><td>" + x[0] + "</td><td>" + Object.values(x[1]) + "</td></tr>").join("") + "</table>";
+                        read_trace_header(1);
                         break;
                 
                     default:
@@ -141,10 +171,16 @@
         } catch (error) {
             alert("No files were selected!");
         }
+
+        async function read_trace_header(trace_no){
+            content = await call("trc-hdr",trace_no);            
+            document.querySelector(`#table_trc_hdr`).innerHTML = "<table class='table'>" + Object.entries(content).map(x=> "<tr><td>" + x[0] + "</td><td>" + Object.values(x[1]) + "</td></tr>").join("") + "</table>";
+
+        }
         
         //Wrapper function to make API call to server
-        async function call (api_request,target){
-            let apiUrl, trace_no = 1, file_type = "3D";
+        async function call (api_request,trace_no){
+            let apiUrl, file_type = "3D";
             switch (api_request) {
                 case "ebc-hdr":
                 case "EBCDIC-header":
@@ -172,6 +208,7 @@
             const formData = new FormData();
             formData.append('file_path', selectedRecord.file_path + "/" + selectedRecord.file_name);
             formData.append('traceno', trace_no);
+            formData.append('file_type', file_type);
             // formData.append('file_type', file_type);
 
             return fetch(apiUrl, {
@@ -188,7 +225,7 @@
                 return data;
             })
             .catch(error => {
-                console.error('Error fetching SEGY data:', error);                
+                console.error('Error fetching data:', error);                
             });
         }
 
