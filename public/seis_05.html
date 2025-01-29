@@ -31,8 +31,9 @@
         </div>
         
     </body>
+
+    <script src="config/main.js"></script>
     <script>
-        const g_apiUrl = 'http://10.203.10.230:8000/';
 
         let people = [
             { id: 1, text: 'Adams, John' },
@@ -73,12 +74,15 @@
                     }
                 },
                 { field: 'application_project_id', type: 'list',
-                    html: { span: 10, column: 0, label: 'Application Project (ID)', attr: 'style = "width:40%"'},
+                    html: { span: 10, column: 0, label: 'Application Project (ID)', attr: 'style = "width:40%"; onchange=call("fetch_srv_values")'},
                     options: { items: ['one','twp'] }
                 },
                 { field: 'seismic_survey_id', type: 'list',
-                    html: { span: 10, column: 0, group: 'Survey', label: 'Seismic Survey (ID)', attr: 'style = "width:40%"'},
+                    html: { span: 10, column: 0, group: 'Survey', label: 'Seismic Survey (ID)', attr: 'style = "width:40%"; onchange=fetch_datasets()', text: ' @srvy'},
                     options: { items: ['one','twp'] }
+                },
+                { field: 'seismic_survey_new', type: 'text',
+                    html: { span: 5, column: 0, group: 'Survey', label: ' or Create New Survey', attr: 'style = "width:40%";', anchor: '@srvy'}                    
                 },
                 { field: 'survey_remarks', type: 'text', disabled: true,
                     html: { span: 10, column: 0, label: 'Survey Remarks', attr: 'style = "width:40%"'},
@@ -126,7 +130,6 @@
             }
         });
 
-
         let grid = new w2grid({
             name: 'dataset_input',
             box: '#dataset_input',
@@ -161,11 +164,12 @@
             box: '#dataset_existing',
             header: 'Existing Datasets',
             show: { header: true },
+            recid: "id",
             columns: [
-                { field: 'lname', text: 'Name', size: '30%', sortable: true },
-                { field: 'recid', text: 'ID', size: '80px', sortable: true},
-                { field: 'fname', text: 'Domain', size: '30%', sortable: true },
-                { field: 'email', text: 'Version', size: '40%' }
+                { field: 'name', text: 'Name', size: '300px', sortable: true },
+                { field: 'id', text: 'ID', size: '80px', sortable: true},
+                { field: 'domain', text: 'Domain', size: '70px', sortable: true },
+                { field: 'version', text: 'Version', size: '70px' }
             ],
             onClick(event) {
                 // need timer for nicer visual effect that record was selected
@@ -179,26 +183,26 @@
 
 
         function updateLOV(){
-            let apiUrl = g_apiUrl + 'fetch_db_values';
+            let apiUrl = g_apiUrl + '/fetch_db_values';
 
             // Prepare POST request with file path and file type
             const formData = new FormData();
-            formData.append('file_path', selectedRecord.file_path + "/" + selectedRecord.file_name);
-            // formData.append('traceno', trace_no);
-            formData.append('file_type', file_type);
 
             fetch(apiUrl, {
-                method: 'POST',
-                body: formData,
+                method: 'POST'
+                // body: formData,
             })
             .then(response => {
-                console.log(response);
+                // console.log(response);
                 if (!response.ok) {
                     throw new Error(`Network response was not ok: ${response.statusText}`);
                 }
                 return response.json();
             })
             .then(data => {
+
+                w2frm_createjob.fields[0].w2field.options.items = data.datastore;
+                w2frm_createjob.fields[1].w2field.options.items = data.application_project;
                 return data;
             })
             .catch(error => {
@@ -211,6 +215,72 @@
                             {id: 3, text: "three"},
                             {id: 4, text: "four"}
                         ];
+        }
+
+        updateLOV();
+
+        function call(path){
+
+            // Prepare POST request with file path and file type
+            const formData = new FormData();
+            // formData.append('file_path', selectedRecord.file_path + "/" + selectedRecord.file_name);
+            formData.append('file_path', "/stage/alok/Data/MR/PSS_DATA/25389879_PSS.sgy");            
+            formData.append('file_type', "3D");
+            formData.append('projid', w2frm_createjob.getValue("application_project_id").id);
+            // formData.append('traceno', trace_no);
+            // formData.append('file_type', file_type);
+
+            fetch(g_apiUrl + "/" +path, {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                w2frm_createjob.setValue("seismic_survey_id","");
+                w2frm_createjob.fields[2].w2field.options.items = data;
+                w2frm_createjob.refresh();
+                return data;
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);                
+            });
+        }
+
+        function fetch_datasets(){
+
+            // Prepare POST request
+            const formData = new FormData();
+            formData.append('srvid', w2frm_createjob.getValue("seismic_survey_id").id);
+            formData.append('file_type', "3D");
+
+            fetch(g_apiUrl + "/fetch_ds_values", {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                w2ui.dataset_existing.clear();
+                w2ui.dataset_existing.add(data);
+
+                // w2frm_createjob.setValue("seismic_survey_id","");
+                // w2frm_createjob.fields[2].w2field.options.items = data;
+                // w2frm_createjob.refresh();
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);                
+            });
         }
     </script>
     </html>

@@ -45,7 +45,7 @@
 </style>
 
 <body>
-    <div style="height: 180px;"></div>
+    <div style="height: 40px;"></div>
     <div class="container">
         <div class="row">
             <div class="col">
@@ -74,7 +74,7 @@
                             <div id="trace_drag" style="background-color: #424242; color: white; border-radius: 3px; margin: 3px ; text-align: center;"></div>                            
                         </div>
                         <div class="col-6">
-                            <input id="trace_range" type="range" class="" 
+                            <input id="trace_range" type="range" class="form-range" 
                             min="1" max="" step="1" 
                             onchange="
                                 document.getElementById('trace_no').value = this.value;
@@ -122,7 +122,7 @@
                 onClick: async function (target, data) {
                     console.log(target,data);
                     if (target == "qc"){
-                        let response = await call("qc-log");
+                        let response = await call("start-qc");
                         console.log(response);
                         return;
                     }
@@ -206,7 +206,7 @@
             document.getElementById("trace_range").setAttribute("max",trace_max);
             let labels = "<option value=1 label=1></option>";
             for (let i = trace_max/5; i < trace_max; i = i + trace_max/5) {                
-                let label_val = Math.ceil(i/100)*100;
+                let label_val = Math.ceil(i/10)*10;
                 labels += `<option value=${label_val} label=${label_val}></option>`;                
             }
             labels += `<option value=${trace_max} label=${trace_max}></option>`;   
@@ -217,7 +217,12 @@
         
         //Wrapper function to make API call to server
         async function call (api_request,trace_no){
-            let apiUrl, file_type = "3D";
+            // Get select file with path
+            let selectedRecord = w2ui.file_load_list.get(w2ui.file_load_list.getSelection()[0]);
+
+            let apiUrl, 
+                file_type = "3D", 
+                file_path = selectedRecord.file_path + "/" + selectedRecord.file_name;
             switch (api_request) {
                 case "ebc-hdr":
                 case "EBCDIC-header":
@@ -230,20 +235,24 @@
                 case "trc-hdr":
                 case "trace-header":
                     apiUrl = g_apiUrl + "/get_trc_hdr";
-                    break;            
-                case "qc-log":                
+                    break;
+                case "start-qc":
                     apiUrl = g_apiUrl + "/qc_log";
-                    break;            
+                    break;
+                case "read-qc-log":
+                    apiUrl = g_apiUrl + "/qc_log";
+                    file_path += "_qc.log";
+                    break;
                 default:
                     break;
             }
 
-            // Get select file with path
-            let selectedRecord = w2ui.file_load_list.get(w2ui.file_load_list.getSelection()[0]);
+            
+            
             
             // Prepare POST request with file path and file type
             const formData = new FormData();
-            formData.append('file_path', selectedRecord.file_path + "/" + selectedRecord.file_name);
+            formData.append('file_path', file_path);
             formData.append('traceno', trace_no);
             formData.append('file_type', file_type);
             // formData.append('file_type', file_type);
@@ -265,7 +274,6 @@
                 console.error('Error fetching data:', error);                
             });
         }
-
     </script>
 </body>
 
