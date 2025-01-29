@@ -23,6 +23,24 @@
         margin: 0px 20px 20px 0px;
         transition: 0.7s ease-out;
     }
+
+    datalist {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        writing-mode: vertical-lr;
+        width: 400px;
+    }
+
+    option {
+        padding: 0;
+    }
+
+    input[type="range"] {
+        width: 400px;
+        margin: 0;
+    }
+
     
 </style>
 
@@ -52,15 +70,25 @@
                                 <input id="trace_no" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" value="1">
                             </div>
                         </div>
-                        <div class="col-1">
+                        <div class="col-2">
+                            <div id="trace_drag" style="background-color: #424242; color: white; border-radius: 3px; margin: 3px ; text-align: center;"></div>                            
+                        </div>
+                        <div class="col-6">
+                            <input id="trace_range" type="range" class="" 
+                            min="1" max="" step="1" 
+                            onchange="
+                                document.getElementById('trace_no').value = this.value;
+                                read_and_display_trace_header(this.value);
+                                document.getElementById('trace_drag').innerText = '';
+                                "
+                            oninput="document.getElementById('trace_drag').innerText = 'Go to trace # ' + this.value; "
+                            list="trace_label_values"
+                            >
 
+                            <datalist id="trace_label_values">
+                            </datalist>
                         </div>
-                        <div class="col">
-                            <input id="trace_range" type="range" class="form-range" min="1" max="5" step="1" onchange="document.getElementById('trace_no').value = this.value; read_trace_header(this.value);">
-                        </div>
-                        <div class="col-1">
-
-                        </div>
+                        
                     </div>
                     <div id="table_trc_hdr">
 
@@ -70,11 +98,8 @@
         </div>
     </div>
 
+    <script src="config/main.js"></script>
     <script>
-        var g_mode = "file_select";
-        const g_apiUrl = '';
-
-        //Check if anything is passed. If not, default to file selection
         
  
         // widget configuration
@@ -154,7 +179,7 @@
                         document.querySelector(`#${event.target}`).innerHTML = "<table class='table'>" + Object.entries(content).map(x=> "<tr><td>" + x.join("</td><td>") + "</td></tr>").join("") + "</table>";                        
                         break;
                     case "div_trc_hdr":                        
-                        read_trace_header(1);
+                        read_and_display_trace_header(1);
                         break;
                 
                     default:
@@ -172,9 +197,21 @@
             alert("No files were selected!");
         }
 
-        async function read_trace_header(trace_no){
-            content = await call("trc-hdr",trace_no);            
-            document.querySelector(`#table_trc_hdr`).innerHTML = "<table class='table'>" + Object.entries(content).map(x=> "<tr><td>" + x[0] + "</td><td>" + Object.values(x[1]) + "</td></tr>").join("") + "</table>";
+        async function read_and_display_trace_header(trace_no){
+            let content = await call("trc-hdr",trace_no);            
+            let trace_header = content[0];
+            let trace_max = content[1];
+            document.querySelector(`#table_trc_hdr`).innerHTML = "<table class='table table-sm'>" + Object.entries(trace_header).map(x=> "<tr><td>" + x[0] + "</td><td>" + Object.values(x[1]) + "</td></tr>").join("") + "</table>";
+
+            document.getElementById("trace_range").setAttribute("max",trace_max);
+            let labels = "<option value=1 label=1></option>";
+            for (let i = trace_max/5; i < trace_max; i = i + trace_max/5) {                
+                let label_val = Math.ceil(i/100)*100;
+                labels += `<option value=${label_val} label=${label_val}></option>`;                
+            }
+            labels += `<option value=${trace_max} label=${trace_max}></option>`;   
+            document.getElementById("trace_label_values").innerHTML = labels;
+            // document.getElementById("trace_no").value = 1;
 
         }
         
@@ -184,18 +221,18 @@
             switch (api_request) {
                 case "ebc-hdr":
                 case "EBCDIC-header":
-                    apiUrl = g_apiUrl + "get_ebc_hdr";
+                    apiUrl = g_apiUrl + "/get_ebc_hdr";
                     break;
                 case "bin-hdr":
                 case "binary-header":
-                    apiUrl = g_apiUrl + "get_bin_hdr";
+                    apiUrl = g_apiUrl + "/get_bin_hdr";
                     break;
                 case "trc-hdr":
                 case "trace-header":
-                    apiUrl = g_apiUrl + "get_trc_hdr";
+                    apiUrl = g_apiUrl + "/get_trc_hdr";
                     break;            
                 case "qc-log":                
-                    apiUrl = g_apiUrl + "qc_log";
+                    apiUrl = g_apiUrl + "/qc_log";
                     break;            
                 default:
                     break;

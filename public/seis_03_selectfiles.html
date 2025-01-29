@@ -57,19 +57,16 @@
         </div>
     </div>
 
-
+    <script src="config/main.js"></script>
     <script>
-        var g_serverURL="";
-        var g_mode = "file_select";
         var g_currentPath;
-
         //Check if anything is passed. If not, default to file selection
 
         // Function to get directory list, separate files & folders and display them
         function getDirectoryListing(path){
             if (path == null) path = '/stage/alok/Data/MR/PSS_DATA';
             w2ui.file_folder_listing.lock("Loading...",true);
-            fetch(`${g_serverURL}/?dir=${path}`)
+            fetch(`${g_apiUrl}/?dir=${path}`)
             .then(response => response.json())
             .then(data => {
                 console.log(data);
