@@ -20,7 +20,6 @@
     }
     #w2grid_files_for_loading {
         height: 350px;
-        margin: 0px 20px 20px 0px;
         transition: 0.7s ease-out;
     }
 
@@ -64,7 +63,7 @@
                 <div id="div_trc_hdr" class="tab-content" style="display: none;">   
                                          
                     <div class="row">
-                        <div class="col-2">
+                        <div class="col-3">
                             <div class="input-group input-group-sm mb-3">
                                 <span class="input-group-text" id="inputGroup-sizing-sm">Trace Number</span>
                                 <input id="trace_no" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" value="1">
@@ -73,7 +72,7 @@
                         <div class="col-2">
                             <div id="trace_drag" style="background-color: #424242; color: white; border-radius: 3px; margin: 3px ; text-align: center;"></div>                            
                         </div>
-                        <div class="col-6">
+                        <div class="col-7">
                             <input id="trace_range" type="range" class="form-range" 
                             min="1" max="" step="1" 
                             onchange="
@@ -90,9 +89,14 @@
                         </div>
                         
                     </div>
-                    <div id="table_trc_hdr">
-
+                    <div class="row">
+                        <div class="col">
+                            <div id="table_trc_hdr">
+    
+                            </div>
+                        </div>
                     </div>
+                    
                 </div>
             </div>
         </div>
@@ -150,6 +154,9 @@
                 // { field: 'version', text: 'Version', size: '120px' },
                 // { field: 'dt', text: 'Depth/Time', size: '120px' },
                 // { field: 'qc', text: 'QC <input type="checkbox" id="qc_check_all">', type: 'toggle', size: '60px', editable: { type: 'checkbox' } }
+            ],
+            searchData : [
+                // { field : 'file_name', operator : 'contains', type: 'text' }
             ]
         })
 
@@ -201,7 +208,7 @@
             let content = await call("trc-hdr",trace_no);            
             let trace_header = content[0];
             let trace_max = content[1];
-            document.querySelector(`#table_trc_hdr`).innerHTML = "<table class='table table-sm'>" + Object.entries(trace_header).map(x=> "<tr><td>" + x[0] + "</td><td>" + Object.values(x[1]) + "</td></tr>").join("") + "</table>";
+            document.querySelector(`#table_trc_hdr`).innerHTML = "<table class='table table-sm'>" + Object.entries(trace_header).map(x=> "<tr><td>" + x[0] + "</td><td>" + x[1] + "</td></tr>").join("") + "</table>";
 
             document.getElementById("trace_range").setAttribute("max",trace_max);
             let labels = "<option value=1 label=1></option>";
