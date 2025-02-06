@@ -33,10 +33,30 @@
     <div class="container">
         <div class="row">
             <div class="col-4">
-                <div class="row"><div class="input-group input-group-sm mb-3">
-                    <span class="input-group-text">Path</span>
-                    <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" id="g-current-path" >
-                    <button class="btn btn-secondary" type="button" onclick='getDirectoryListing(document.getElementById("g-current-path").value)'>Go</button>
+                <div class="row">
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Path</span>
+                        <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" id="g-current-path" >
+                        <button class="btn btn-secondary" type="button" onclick='getDirectoryListing(document.getElementById("g-current-path").value)'>Go</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-3">
+                <!-- File Type: 
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1">
+                    <label class="form-check-label" for="inlineRadio1">2D</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="option2">
+                    <label class="form-check-label" for="inlineRadio2">3D</label>
+                </div> -->
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">File Type</div>
+                    <select class="form-select" id="file_type">
+                        <option>2D</option>
+                        <option>3D</option>                            
+                    </select>
                 </div>
             </div>
         </div>
@@ -50,7 +70,7 @@
         </div>
         <div class="row">
             <div class="col-4">
-                <button type="button" class="btn btn-primary" onclick="proceedForQC()">Proceed for QC / Edit / Load</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="proceedForQC()">Proceed for QC & Edit</button>
             </div>
         </div>
     </div>
@@ -245,6 +265,7 @@
 
             //Add to localstorage and open QC/Edit page
             localStorage.setItem('files', JSON.stringify(w2ui.file_load_list.records));
+            localStorage.setItem('file_type', document.getElementById("file_type").value);
             window.location.href="seis_04_qc.html";
         }        
 
