@@ -141,9 +141,9 @@
                 </div>
                 <div id="view_qc" class="tab-content" style="display: none;">        
                     <div style="padding-bottom: 10px; padding-left: 30px;">
-                        <span class="badge bg-danger" style="cursor: pointer;" onclick=toggle_logs('E',this,'danger')>Error</span>
-                        <span class="badge bg-warning" style="cursor: pointer;" onclick=toggle_logs('W',this,'warning')>Warning</span>
-                        <span class="badge bg-info" style="cursor: pointer;" onclick=toggle_logs('I',this,'info')>Info</span>
+                        <span class="badge bg-danger" style="cursor: pointer;" onclick="toggle_logs('E',this,'danger')">Error</span>
+                        <span class="badge bg-warning" style="cursor: pointer;" onclick="toggle_logs('W',this,'warning')">Warning</span>
+                        <span class="badge bg-info" style="cursor: pointer;" onclick="toggle_logs('I',this,'info')">Info</span>
                     </div>
                     <div id="view_qc_text">
 
@@ -184,7 +184,7 @@
                     }
                     if (target == "create_load_job"){
                         localStorage.setItem('files_for_job', JSON.stringify(w2ui.w2grd_file_load_list.getSelection()));
-                        window.location.href="seis_05.html";
+                        window.location.href="seis_05_create_job.html";
                         return;
                     }
                 }

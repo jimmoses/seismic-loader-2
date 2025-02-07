@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>EDS</title>
+        <script src="./lib/w2ui/w2ui-2.0.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="./lib/w2ui/w2ui-2.0.min.css">
+        <!-- <link rel="stylesheet" type="text/css" href="./lib/bootstrap-icons.min.css"> -->
+    
+        <link href="./stylesheets/bootstrap.min.css" rel="stylesheet">
+        <link href="./stylesheets/css2.css" rel="stylesheet">
+        <link href="./lib/bootstrap-icons.css" rel="stylesheet">
+        <script src="./lib/bootstrap.bundle.min.js"></script>
+    </head>
+    <body>
+        <div style="height: 40px;"></div>
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <div id="grid1" style="display: inline-block; width: 100%; height: 500px;"></div>
+                </div>
+                <div class="col">
+                    <div id="log_display_area" style="display:none">
+                        <div id="grid2" style="display: inline-block; width: 100%; height: 200px;"></div>
+                        <div id="log_text" style="display: inline-block; width: 100%; height: 300px; overflow-y: scroll; border: 1px #e1e1e1 solid; border-radius: 3px; padding: 10px;">
+                            2025-02-07 14:36:14 INFO  User login successful: userID=12345<br>
+                            2025-02-07 14:36:15 WARN  Disk space running low on server: serverID=67890<br>
+                            2025-02-07 14:36:16 ERROR Failed to connect to database: dbID=54321<br>
+                            2025-02-07 14:36:17 INFO  File uploaded successfully: fileID=98765<br>
+                            2025-02-07 14:36:18 DEBUG User session timeout: userID=12345<br>
+                            2025-02-07 14:36:19 INFO  Scheduled backup completed: backupID=11223<br>
+                            2025-02-07 14:36:20 WARN  High memory usage detected: processID=33445<br>
+                            2025-02-07 14:36:21 ERROR Unauthorized access attempt: userID=67890<br>
+                            2025-02-07 14:36:22 INFO  New user registration: userID=99887<br>
+                            2025-02-07 14:36:23 DEBUG Cache cleared: cacheID=77654<br>
+                            2025-02-07 14:36:24 INFO  System reboot initiated: systemID=44556<br>
+                            2025-02-07 14:36:25 WARN  Network latency detected: networkID=22334<br>
+                            2025-02-07 14:36:26 ERROR Application crash: appID=66778<br>
+                            2025-02-07 14:36:27 INFO  User logout successful: userID=12345<br>
+                            2025-02-07 14:36:28 DEBUG Configuration updated: configID=88990<br>
+                            2025-02-07 14:36:29 INFO  submitted_on sent: emailID=55667<br>
+                            2025-02-07 14:36:30 WARN  CPU temperature high: cpuID=33456<br>
+                            2025-02-07 14:36:31 ERROR Payment processing failed: transactionID=99876<br>
+                            2025-02-07 14:36:32 INFO  Data export completed: exportID=44567<br>
+                            2025-02-07 14:36:33 DEBUG Session token refreshed: tokenID=22345<br>
+                            2025-02-07 14:36:34 INFO  Service started: serviceID=66789<br>
+                            2025-02-07 14:36:35 WARN  Low battery warning: deviceID=99887<br>
+                            2025-02-07 14:36:36 ERROR File not found: fileID=55678<br>
+                            2025-02-07 14:36:37 INFO  User profile updated: userID=12345<br>
+                            2025-02-07 14:36:38 DEBUG Debugging mode enabled: debugID=33456<br>
+                        </div>
+                    </div>
+                </div>
+            </div>            
+        </div>
+        
+    </body>
+
+    <script src="config/main.js"></script>
+    <script>
+        let grid = new w2grid({
+            name: 'grid1',
+            box: '#grid1',
+            header: 'Files submited for loading',
+            show: { header: true },
+            columns: [
+                { field: 'recid', text: 'ID', size: '50px', sortable: true, attr: 'align=center' },
+                { field: 'fname', text: 'Filename', size: '100px', sortable: true },
+                { field: 'path', text: 'Path', size: '130px', sortable: true },
+                { field: 'submitted_on', text: 'Submitted on', size: '100px' },
+                { field: 'status', text: 'Status', size: '120px', type: 'date', sortable: true }
+            ],
+            records: [
+                { recid: 1, fname: 'seis_test', path: '/tmp', status : 'In Progress', submitted_on: '4/3/2012' },
+                { recid: 6, fname: 'mum_seis', path: '/tmp', status : 'Completed', submitted_on: '4/10/2012' }
+            ],
+            onClick(event) {
+                let record = this.get(event.detail.recid);
+                grid2.clear();
+                grid2.add([
+                    { recid: 0, name: 'ID:', value: record.recid },
+                    { recid: 1, name: 'Filename:', value: record.fname },
+                    { recid: 2, name: 'Path:', value: record.path },
+                    { recid: 4, name: 'Submitted on:', value: record.status},
+                    { recid: 3, name: 'Status:', value: record.submitted_on },
+                ]);
+                if (record)
+                    document.getElementById("log_display_area").style="";
+                else
+                    document.getElementById("log_display_area").style="display:none";
+            }
+        })
+
+        let grid2 = new w2grid({
+            name: 'grid2',
+            box: '#grid2',
+            header: 'Load Job Details',
+            show: { header: true, columnHeaders: false },
+            name: 'grid2',
+            columns: [
+                { field: 'name', text: 'Name', size: '100px', style: 'background-color: #efefef; border-bottom: 1px solid white; padding-right: 5px;', attr: "align=right" },
+                { field: 'value', text: 'Value', size: '100%' }
+            ]
+        })
+        
+    </script>
+    </html>
