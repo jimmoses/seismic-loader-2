@@ -16,11 +16,13 @@
         <div class="container">
             <div class="row">
                 <div class="col">
+                    <!-- Main form to get project and survey info -->
                     <div id="w2frm_create_job" style="height: 540px;"></div>
                 </div>                
             </div>    
             <div style="height: 20px;"></div>
             <div class="row">
+                <!-- Tables for dataset mapping -->
                 <div class="col">                    
                     <div id="dataset_input" style="display: inline-block; width: 100%; height: 300px;"></div>                    
                 </div>
@@ -35,66 +37,54 @@
     <script src="config/main.js"></script>
     <script>
 
-        let people = [
-            { id: 1, text: 'Adams, John' },
-            { id: 2, text: 'Johnson, Peter' },
-            { id: 3, text: 'Lewis, Frank' },
-            { id: 4, text: 'Cruz, Steve' },
-            { id: 5, text: 'Donnun, Nick' }
-        ];
-
         let w2frm_createjob = new w2form({
             box: '#w2frm_create_job',
             name: 'seis_form',
             header: 'Create Job',
-            // record: {
-            //     simple: {
-            //         text: 'default text value',
-            //         alpha: 'ABC123',
-            //         int: null,
-            //         float: 0
-            //     },
-            //     single: {
-            //         check: true,
-            //         toggle: true
-            //     },
-            //     list: 3,
-            //     enum: [1, 4]
-            // },
             fields: [
                 { field: 'datastore_id', type: 'list',
-                    html: { span: 10, column: 0, group: 'Datastore', label: 'Datastore (ID)', attr: 'style = "width:40%"'},
-                    options: { items: 
-                        [
-                            {id: 1, text: "one"},
-                            {id: 2, text: "two"},
-                            {id: 3, text: "three"},
-                            {id: 4, text: "four"}
-                        ]
-                    }
+                    html: { span: 10, column: 0, group: 'Datastore', label: 'Datastore (ID)', attr: 'style = "width:40%"'}
                 },
                 { field: 'application_project_id', type: 'list',
-                    html: { span: 10, column: 0, label: 'Application Project (ID)', attr: 'style = "width:40%"; onchange=call("fetch_srv_values")'},
-                    options: { items: ['one','twp'] }
+                    html: { span: 10, column: 0, label: 'Application Project (ID)', 
+                    attr: `style = "width:40%"; 
+                        onchange=fetch_survey_list("fetch_srv_values")
+                    `}
                 },
                 { field: 'seismic_survey_id', type: 'list',
-                    html: { span: 10, column: 0, group: 'Survey', label: 'Seismic Survey (ID)', attr: 'style = "width:40%"; onchange=fetch_datasets()', text: ' @srvy'},
-                    options: { items: ['one','twp'] }
+                    html: { span: 10, column: 0, group: 'Survey', label: 'Seismic Survey (ID)',
+                    attr: `style = "width:40%"; 
+                        onchange=fetch_datasets();fetch_crs_list();
+                    `,
+                    text: `&nbsp;&nbsp;&nbsp;or&nbsp;&nbsp
+                        <a href="#" 
+                            onclick="
+                                w2frm_createjob.set('seismic_survey_id', {hidden: true }) ;                            
+                                w2frm_createjob.set('seismic_survey_new', {hidden: false }) ;
+                                w2frm_createjob.setValue('seismic_survey_new','');
+                                w2frm_createjob.refresh();
+                                fetch_crs_list(true);
+                            ">Create New Survey</a>`}
                 },
-                { field: 'seismic_survey_new', type: 'text',
-                    html: { span: 5, column: 0, group: 'Survey', label: ' or Create New Survey', attr: 'style = "width:40%";', anchor: '@srvy'}                    
+                { field: 'seismic_survey_new', type: 'text', hidden: true,
+                    html: { span: 10, column: 0, group: 'Survey', label: 'Create New Survey', attr: 'style = "width:40%" placeholder="Enter New Survey Name"',            
+                    text: `&nbsp;&nbsp;&nbsp;or&nbsp;&nbsp
+                        <a href="#" 
+                            onclick="
+                                w2frm_createjob.set('seismic_survey_id', {hidden: false }) ;                            
+                                w2frm_createjob.set('seismic_survey_new', {hidden: true }) ;
+                                fetch_crs_list(false);
+                            ">Select Existing Survey</a>`}
                 },
                 { field: 'survey_remarks', type: 'text', disabled: true,
-                    html: { span: 10, column: 0, label: 'Survey Remarks', attr: 'style = "width:40%"'},
-                    options: { items: ['one','twp'] }
+                    html: { span: 10, column: 0, label: 'Survey Remarks', attr: 'style = "width:40%"'}
                 },
-                { field: 'crs', type: 'text', disabled: true,
-                    html: { span: 10, column: 0, label: 'CRS Name (Code)', attr: 'style = "width:40%"'},
-                    options: { items: ['one','twp'] }
+                { field: 'crs', type: 'list', disabled: false,
+                    html: { span: 10, column: 0, label: 'CRS Name (Code)', attr: 'style = "width:40%"'}
                 },
                 { field: 'output_location', type: 'list',
                     html: { span: 10, column: 0, label: 'Output Location' , attr: 'style = "width:40%"'},
-                    options: { items: ['one','twp'] }
+                    options: { items: ['/seis1','/seis2','/tmp'] }
                 },
                 { field: 'options', type: 'checks',
                     html: { span: 5, label: '', group: 'Additional Options', column: 'after'},
@@ -130,36 +120,29 @@
             }
         });
 
-        let grid = new w2grid({
+        let w2grd_current_datasets = new w2grid({
             name: 'dataset_input',
             box: '#dataset_input',
             header: 'Datasets to be loaded',
             show: { header: true },
+            recid: "id",
             columns: [
-                { field: 'lname', text: 'Name', size: '30%', sortable: true },
-                { field: 'recid', text: 'ID', size: '80px', sortable: true},
-                { field: 'fname', text: 'Domain', size: '30%', sortable: true },
-                { field: 'email', text: 'Version', size: '40%' }
-            ],
-            records: [
-                // { recid: 1, fname: 'Jane', lname: 'Doe', email: 'jdoe@gmail.com', sdate: '4/3/2012' },
-                // { recid: 2, fname: 'Stuart', lname: 'Motzart', email: 'jdoe@gmail.com', sdate: '4/3/2012' },
-                // { recid: 3, fname: 'Jin', lname: 'Franson', email: 'jdoe@gmail.com', sdate: '4/3/2012' },
-                // { recid: 4, fname: 'Susan', lname: 'Ottie', email: 'jdoe@gmail.com', sdate: '4/3/2012' },
-                // { recid: 5, fname: 'Kelly', lname: 'Silver', email: 'jdoe@gmail.com', sdate: '4/3/2012' },
-                // { recid: 6, fname: 'Francis', lname: 'Gatos', email: 'jdoe@gmail.com', sdate: '4/3/2012' }
+                { field: 'name', text: 'Name', size: '30%', sortable: true },
+                { field: 'id', text: 'ID', size: '80px', sortable: true},
+                { field: 'domain', text: 'Domain', size: '30%', sortable: true },
+                { field: 'version', text: 'Version', size: '40%' }
             ],
             onClick(event) {
                 // need timer for nicer visual effect that record was selected
                 setTimeout(() => {
-                    grid2.add(w2utils.extend({}, grid.get(event.detail.recid), { selected : false }) )
-                    grid.selectNone()
-                    grid.remove(event.detail.recid)
+                    w2grd_existing_datasets.add(w2utils.extend({}, w2grd_current_datasets.get(event.detail.recid), { selected : false }) )
+                    w2grd_current_datasets.selectNone()
+                    w2grd_current_datasets.remove(event.detail.recid)
                 }, 150)
             }
         })
 
-        let grid2 = new w2grid({
+        let w2grd_existing_datasets = new w2grid({
             name: 'dataset_existing',
             box: '#dataset_existing',
             header: 'Existing Datasets',
@@ -174,15 +157,16 @@
             onClick(event) {
                 // need timer for nicer visual effect that record was selected
                 setTimeout(() => {
-                    grid.add(w2utils.extend({}, grid2.get(event.detail.recid), { selected : false }))
-                    grid2.selectNone()
-                    grid2.remove(event.detail.recid)
+                    w2grd_current_datasets.add(w2utils.extend({}, w2grd_existing_datasets.get(event.detail.recid), { selected : false }))
+                    w2grd_existing_datasets.selectNone()
+                    w2grd_existing_datasets.remove(event.detail.recid)
                 }, 150)
             }
         })
 
-
-        function updateLOV(){
+        //////////////////////////////////////////////////////////////////////////////////
+        //Function to fetch datastore list and project list
+        function fetch_datastore_projects(){
             let apiUrl = g_apiUrl + '/fetch_db_values';
 
             // Prepare POST request with file path and file type
@@ -208,18 +192,11 @@
             .catch(error => {
                 console.error('Error fetching data:', error);                
             });
-
-            w2frm_createjob.fields[2].w2field.options.items = [
-                            {id: 1, text: "one"},
-                            {id: 2, text: "two"},
-                            {id: 3, text: "three"},
-                            {id: 4, text: "four"}
-                        ];
         }
 
-        updateLOV();
-
-        function call(path){
+        //////////////////////////////////////////////////////////////////////////////////
+        //Function to fetch list of surveys when project is selected
+        function fetch_survey_list(path){
 
             // Prepare POST request with file path and file type
             const formData = new FormData();
@@ -243,7 +220,9 @@
             .then(data => {
                 console.log(data);
                 w2frm_createjob.setValue("seismic_survey_id","");
+                w2frm_createjob.setValue("crs","");
                 w2frm_createjob.fields[2].w2field.options.items = data;
+
                 w2frm_createjob.refresh();
                 return data;
             })
@@ -252,6 +231,8 @@
             });
         }
 
+        //////////////////////////////////////////////////////////////////////////////////
+        //Function to fetch existing datasets when survey is selected
         function fetch_datasets(){
 
             // Prepare POST request
@@ -282,5 +263,91 @@
                 console.error('Error fetching data:', error);                
             });
         }
+
+        //////////////////////////////////////////////////////////////////////////////////
+        //Function to fetch and set CRS when survey is selected
+        //In case of new survey, options are listed and user has to select
+        function fetch_crs_list(new_survey){
+            //Clear existing list
+            w2frm_createjob.fields[5].w2field.options.items = [];
+
+            let apiUrl = g_apiUrl + '/fetch_crs_values';
+            let survey_id = new_survey? -1 : w2frm_createjob.getValue("seismic_survey_id").id
+
+            // Prepare POST request with file path and file type
+            const formData = new FormData();
+            formData.append('srvid', survey_id);
+            formData.append('file_type', "3D");
+
+            fetch(apiUrl, {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                // console.log(response);
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                
+                w2frm_createjob.fields[5].w2field.options.items = data;
+
+                //If existing survey is selected, CRS is fixed. So select it automatically and disable selection
+                if(!new_survey) {
+                    w2frm_createjob.fields[5].w2field.setIndex(0);
+                    w2ui.seis_form.set('crs', {disabled: true});                    
+                }
+                else{
+                    w2ui.seis_form.set('crs', {disabled: false});
+                }
+                return data;
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);                
+            });
+        }
+
+        //Not in use
+        function openCreateSurveyForm() {
+            w2prompt({
+                // title: 'Create New Survey',
+                width: 400,
+                height: 200,
+                label: 'Enter Survey Name',
+                value: '',
+                attrs: 'style="width: 200px" placeholder="Type here..."',
+                btn_ok: {
+                    text: 'Create',
+                    class: 'ok-class',
+                    style: 'color: green'
+                },
+                btn_cancel: {
+                    text: 'Cancel',
+                    class: 'ok-class'
+                },
+            },'Create New Survey')
+            .change((event) => {
+                //This event block is just for testing
+                console.log('change', event.detail.originalEvent.target.value)
+            })
+            .ok((event) => {
+                let new_survey_name = event.detail.value;
+                console.log('ok, value=', event.detail.value);
+
+                //Create and use new survey name here
+
+                
+            })
+            .cancel((event) => {
+                console.log('cancel')
+            })
+        }
+
+        
+        //When page is loaded, fetch list of datastore and projects
+        fetch_datastore_projects();
+        
     </script>
     </html>

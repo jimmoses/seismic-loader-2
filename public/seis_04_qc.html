@@ -20,7 +20,6 @@
     }
     #w2grid_files_for_loading {
         height: 350px;
-        margin: 0px 20px 20px 0px;
         transition: 0.7s ease-out;
     }
 
@@ -41,6 +40,39 @@
         margin: 0;
     }
 
+    #table_trc_hdr, #view_qc_text {
+        height: 380px;
+        overflow-x: hidden;
+        overflow-y: scroll;
+    }
+
+    #view_qc_text {
+        border: 1px solid #939393;
+        padding-left: 30px;
+        border-radius: 5px;
+        /* margin: 25px; */
+    }
+
+    #div_ebc_hdr{
+        border: 1px solid #939393;
+        padding: 20px;
+        border-radius: 5px;
+        line-height: 1;
+        background-color: #fbfbfb;
+    }
+
+    .I{
+        color: blue;
+    }
+
+    .W{
+        color: orange;
+    }
+
+    .E{
+        color: red;
+    }
+
     
 </style>
 
@@ -53,18 +85,22 @@
             </div>
         </div>    
         <div class="row">
-            <div class="col">
-                <div id="w2tab_headers" style="margin-bottom: 20px;"></div>
+            <div class="col" id="div_display_area" style="display: none;">
+                <div id="w2tbr_headers_qc" style="margin-bottom: 10px;"></div>
                 <div id="div_ebc_hdr" class="tab-content" style="display: none;">
                     
                 </div>
                 <div id="div_bin_hdr" class="tab-content" style="display: none;">
-                    
+                    <div class="col">
+                        <hr>
+                        <div id="table_bin_hdr">
+
+                        </div>
+                    </div>
                 </div>
-                <div id="div_trc_hdr" class="tab-content" style="display: none;">   
-                                         
+                <div id="div_trc_hdr" class="tab-content" style="display: none;">
                     <div class="row">
-                        <div class="col-2">
+                        <div class="col-3">
                             <div class="input-group input-group-sm mb-3">
                                 <span class="input-group-text" id="inputGroup-sizing-sm">Trace Number</span>
                                 <input id="trace_no" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" value="1">
@@ -73,7 +109,7 @@
                         <div class="col-2">
                             <div id="trace_drag" style="background-color: #424242; color: white; border-radius: 3px; margin: 3px ; text-align: center;"></div>                            
                         </div>
-                        <div class="col-6">
+                        <div class="col-7">
                             <input id="trace_range" type="range" class="form-range" 
                             min="1" max="" step="1" 
                             onchange="
@@ -90,7 +126,26 @@
                         </div>
                         
                     </div>
-                    <div id="table_trc_hdr">
+                    <div class="row">
+                        <div class="col">
+                            <hr>
+                            <div id="table_trc_hdr">
+    
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div id="start_qc" class="tab-content" style="display: none;">
+                    
+                </div>
+                <div id="view_qc" class="tab-content" style="display: none;">        
+                    <div style="padding-bottom: 10px; padding-left: 30px;">
+                        <span class="badge bg-danger" style="cursor: pointer;" onclick="toggle_logs('E',this,'danger')">Error</span>
+                        <span class="badge bg-warning" style="cursor: pointer;" onclick="toggle_logs('W',this,'warning')">Warning</span>
+                        <span class="badge bg-info" style="cursor: pointer;" onclick="toggle_logs('I',this,'info')">Info</span>
+                    </div>
+                    <div id="view_qc_text">
 
                     </div>
                 </div>
@@ -100,11 +155,12 @@
 
     <script src="config/main.js"></script>
     <script>
-        
- 
+
+        var g_file_type = localStorage.getItem("file_type");
+
         // widget configuration
-        let file_load_list = new w2grid({
-            name: 'file_load_list',
+        let w2grd_file_load_list = new w2grid({
+            name: 'w2grd_file_load_list',
             box: '#w2grid_files_for_loading',
             show: {
                 header: true,
@@ -115,7 +171,7 @@
                 items: [
                     // { type: 'button', id: 'add_files', text: 'Add files from stage', icon: 'bi bi-plus-circle' },
                     // { type: 'break' },
-                    { type: 'button', id: 'qc', text: 'QC', icon: 'bi bi-search' },
+                    // { type: 'button', id: 'qc', text: 'QC', icon: 'bi bi-search' },
                     { type: 'spacer' },
                     { type: 'button', id: 'create_load_job', text: 'Create Load Job', icon: 'bi bi-arrow-right-square' }
                 ],
@@ -127,13 +183,13 @@
                         return;
                     }
                     if (target == "create_load_job"){
-                        localStorage.setItem('files_for_job', JSON.stringify(w2ui.file_load_list.getSelection()));
-                        window.location.href="seis_05.html";
+                        localStorage.setItem('files_for_job', JSON.stringify(w2ui.w2grd_file_load_list.getSelection()));
+                        window.location.href="seis_05_create_job.html";
                         return;
                     }
                 }
             },
-            header: '<b>Seismic Data Loader - QC / Edit</>',
+            header: `<b>Seismic Data Loader - QC & Edit <span class="badge bg-dark">${g_file_type} files</span></>`,
             // records: [{
             //     file_name: 'test',
             //     crs: 'test',
@@ -142,26 +198,70 @@
             // }],
             method: 'GET', // need this to avoid 412 error on Safari
             columns: [
-                { field: 'file_name', text: 'File Name', size: '40%' },
-                { field: 'file_path', text: 'Path', size: '60%' },
+                { field: 'file_name', text: 'File Name', size: '35%' },
+                { field: 'file_path', text: 'Path', size: '55%' },
+                { field: 'qc_status', text: 'QC status', size: '100px' },
                 // { field: 'crs', text: 'Spheroid', size: '30%', editable: { type: 'text' } },
                 // { field: 'survey', text: 'Survey Name', size: '30%' },
                 // { field: 'stage', text: 'Stage', size: '40%' },
                 // { field: 'version', text: 'Version', size: '120px' },
                 // { field: 'dt', text: 'Depth/Time', size: '120px' },
                 // { field: 'qc', text: 'QC <input type="checkbox" id="qc_check_all">', type: 'toggle', size: '60px', editable: { type: 'checkbox' } }
-            ]
-        })
-
-        let w2tab_headers = new w2tabs({
-            box: '#w2tab_headers',
-            name: 'tabs',
-            tabs: [
-                { id: 'div_ebc_hdr', text: 'EBCDIC Header' },
-                { id: 'div_bin_hdr', text: 'Binary Header' },
-                { id: 'div_trc_hdr', text: 'Trace Headers' }
             ],
-            onClick: async function (event) {
+            searchData : [
+                // { field : 'file_name', operator : 'contains', type: 'text' }
+            ],
+            async onSelect(event) {
+                await event.complete;
+                // console.log('select', event.detail, this.getSelection());
+                // console.log(event,event.target);
+
+                if(this.getSelection().length == 0){
+                    //If no file is selected, hide toolbar
+                    document.getElementById("div_display_area").setAttribute("style","display:none");
+                }
+                else{
+                    //If a file is selected, show toolbar
+                    document.getElementById("div_display_area").setAttribute("style","");
+
+                    //Show filename
+                    let selected_file = w2ui.w2grd_file_load_list.get( this.getSelection()[0]);
+                    w2ui.toolbar.set('file_name',{text: `<b>${selected_file.file_name}</b>` });
+
+                    // Open EBCDIC Header
+                    w2tbr_headers_qc.click('div_ebc_hdr');
+
+                    //Check QC status and show buttons accordingly
+                    if (selected_file.qc_status == "In Progress"){
+                        w2tbr_headers_qc.set('start_qc',{hidden: true})
+                        w2tbr_headers_qc.set('view_qc',{hidden: false})
+                    }
+                    else{
+                        w2tbr_headers_qc.set('start_qc',{hidden: false})
+                        w2tbr_headers_qc.set('view_qc',{hidden: true})
+                    }
+                }
+                
+            }
+        });
+
+        let w2tbr_headers_qc = new w2toolbar({
+            box: '#w2tbr_headers_qc',
+            name: 'toolbar',
+            items: [
+                { type: 'button', id: 'File', text: 'Selected File : ' },
+                { type: 'button', id: 'file_name', text: ''},                
+                { type: 'new-line' },
+                { type: 'radio', id: 'div_ebc_hdr', group: '1', text: 'EBCDIC Header', icon: 'bi bi-card-text'},
+                { type: 'radio', id: 'div_bin_hdr', group: '1', text: 'Binary Header', icon: 'bi bi-card-heading' },
+                { type: 'radio', id: 'div_trc_hdr', group: '1', text: 'Trace Header', icon: 'bi bi-clipboard-pulse' },
+                { type: 'radio', id: 'start_qc', group: '1', text: 'Start QC', icon: 'bi bi-card-checklist' },
+                { type: 'radio', id: 'view_qc', group: '1', text: 'View QC Log', icon: 'bi bi-card-checklist' },
+                { type: 'spacer' },
+                { type: 'button', id: 'close', text: 'Close', icon: 'w2ui-icon-cross' }
+            ],
+            async onClick(event) {
+                console.log('Target: '+ event.target, event);
                 console.log(event.target);
                 document.querySelectorAll(".tab-content").forEach(x=>x.setAttribute("style","display:none"));
                 document.querySelector(`#${event.target}`).setAttribute("style","");
@@ -174,35 +274,66 @@
                         document.querySelector(`#${event.target}`).innerHTML = content.split("\n").join("<br>");
                         break;
                     case "div_bin_hdr":                        
-                        content = await call("bin-hdr");
-                        // console.table(content);
-                        document.querySelector(`#${event.target}`).innerHTML = "<table class='table'>" + Object.entries(content).map(x=> "<tr><td>" + x.join("</td><td>") + "</td></tr>").join("") + "</table>";                        
+                        read_and_display_binary_header();
                         break;
                     case "div_trc_hdr":                        
                         read_and_display_trace_header(1);
                         break;
-                
+                    case "start_qc":                        
+                        content = call ("start-qc");
+                        //Display Notification
+
+                        //Switch to "View QC Log" Tab and hide "Start QC" Button
+                        if (content) setTimeout(() => {
+                            this.set("start_qc",{hidden: true});
+                            this.set("view_qc",{hidden: false});
+                            this.click("view_qc");
+
+                            //Update QC status for file
+                            w2grd_file_load_list.set (w2grd_file_load_list.getSelection()[0],{qc_status: "In Progress"});
+                        }, 1000);
+                        else{
+                            //Display Error message                            
+                        }
+                        break;
+                    case "view_qc":
+                        read_and_display_qc_log();
+                        
+                        break;                
                     default:
                         break;
                 }
             }
         });
 
-        // Read selected file list from localstorage and add to file listing
-        try {
-            const g_files = JSON.parse(localStorage.getItem('files'));
-            console.log(g_files);
-            w2ui.file_load_list.add(g_files);
-        } catch (error) {
-            alert("No files were selected!");
+        ///////////////////////////////////////////////////////////////////////////
+        //Function to parse and display Binary Header
+        async function read_and_display_binary_header(){
+            let binary_header = await call("bin-hdr");
+            document.querySelector(`#table_bin_hdr`).innerHTML = 
+                "<table class='table table-sm'>" 
+                + "<thead><th>Content</th><th>Byte Location</th><th>Value</th></thead>"
+                + "<tbody>"
+                + Object.entries(binary_header).map(x=> "<tr><td>" + x[1]["key"] + "</td><td>" + x[1]["byte_location"] + "</td><td>" + x[1]["value"] + "</td></tr>"  ).join("") 
+                + "</tbody>";
+                + "</table>";
         }
-
+        
+        ///////////////////////////////////////////////////////////////////////////
+        //Function to parse and display Trace Header
         async function read_and_display_trace_header(trace_no){
             let content = await call("trc-hdr",trace_no);            
             let trace_header = content[0];
             let trace_max = content[1];
-            document.querySelector(`#table_trc_hdr`).innerHTML = "<table class='table table-sm'>" + Object.entries(trace_header).map(x=> "<tr><td>" + x[0] + "</td><td>" + Object.values(x[1]) + "</td></tr>").join("") + "</table>";
+            document.querySelector(`#table_trc_hdr`).innerHTML = 
+                "<table class='table table-sm'>" 
+                + "<thead><th>Content</th><th>Byte Location</th><th>Value</th></thead>"
+                + "<tbody>"
+                + Object.entries(trace_header).map(x=> "<tr><td>" + x[1]["key"] + "</td><td>" + x[1]["byte_location"] + "</td><td>" + x[1]["value"] + "</td></tr>"  ).join("") 
+                + "</tbody>";
+                + "</table>";
 
+            // Set Max Range and adjust labels
             document.getElementById("trace_range").setAttribute("max",trace_max);
             let labels = "<option value=1 label=1></option>";
             for (let i = trace_max/5; i < trace_max; i = i + trace_max/5) {                
@@ -214,14 +345,40 @@
             // document.getElementById("trace_no").value = 1;
 
         }
+    
+        ///////////////////////////////////////////////////////////////////////////
+        //Function to parse and display QC Logs
+        async function read_and_display_qc_log(){
+            content = await call("read-qc-log");
+            console.log(content);
+            let htmlContent = content.log_content.map( x => `<div class='${x.toString().charAt(22)}'>${x}</div>`).join("");
+            document.querySelector(`#view_qc_text`).innerHTML = htmlContent;
+            // document.querySelector(`#view_qc_text`).innerHTML = content.log_content.join("<br>");
+        }
+
+        ///////////////////////////////////////////////////////////////////////////
+        // Function to toggle QC log display
+        function toggle_logs(type,btn,class_name){
+            console.log(btn,class_name);
+            if(btn.classList[1] == "bg-secondary"){
+                document.querySelectorAll(`.${type}`).forEach(x=>x.setAttribute("style",""));
+                btn.className = `badge bg-${class_name}`;
+            }
+            else{
+                btn.className = "badge bg-secondary";
+                document.querySelectorAll(`.${type}`).forEach(x=>x.setAttribute("style","display:none"));
+            }
+        }
+        
+ 
         
         //Wrapper function to make API call to server
         async function call (api_request,trace_no){
             // Get select file with path
-            let selectedRecord = w2ui.file_load_list.get(w2ui.file_load_list.getSelection()[0]);
+            let selectedRecord = w2ui.w2grd_file_load_list.get(w2ui.w2grd_file_load_list.getSelection()[0]);
 
             let apiUrl, 
-                file_type = "3D", 
+                file_type = g_file_type, 
                 file_path = selectedRecord.file_path + "/" + selectedRecord.file_name;
             switch (api_request) {
                 case "ebc-hdr":
@@ -240,15 +397,12 @@
                     apiUrl = g_apiUrl + "/qc_log";
                     break;
                 case "read-qc-log":
-                    apiUrl = g_apiUrl + "/qc_log";
+                    apiUrl = g_apiUrl + "/read_qc_log";
                     file_path += "_qc.log";
                     break;
                 default:
                     break;
             }
-
-            
-            
             
             // Prepare POST request with file path and file type
             const formData = new FormData();
@@ -273,6 +427,15 @@
             .catch(error => {
                 console.error('Error fetching data:', error);                
             });
+        }
+
+        // Read selected file list from localstorage and add to file listing
+        try {
+            const g_files = JSON.parse(localStorage.getItem('files'));
+            console.log(g_files);
+            w2ui.w2grd_file_load_list.add(g_files);
+        } catch (error) {
+            alert("No files were selected!");
         }
     </script>
 </body>
