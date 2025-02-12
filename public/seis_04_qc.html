@@ -167,6 +167,13 @@
                 // footer: true,
                 toolbar: true
             },
+            multiSearch: false,
+            searches: [             
+                { field: 'file_name', label: 'File Name', type: 'text' }
+            ],
+            defaultOperator : {
+                'text'    : 'contains'
+            },
             toolbar: {
                 items: [
                     // { type: 'button', id: 'add_files', text: 'Add files from stage', icon: 'bi bi-plus-circle' },
@@ -369,7 +376,6 @@
                 document.querySelectorAll(`.${type}`).forEach(x=>x.setAttribute("style","display:none"));
             }
         }
-        
  
         
         //Wrapper function to make API call to server
