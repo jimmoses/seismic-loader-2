@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDS EBCDIC Editor</title>
+    <script src="./lib/w2ui/w2ui-2.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="./lib/w2ui/w2ui-2.0.min.css">
+    <!-- <link rel="stylesheet" type="text/css" href="./lib/bootstrap-icons.min.css"> -->
+
+    <!-- For tooltips -->
+    <script src="./lib/popper.min.js"></script>
+
+    <link href="./stylesheets/bootstrap.min.css" rel="stylesheet">
+    <link href="./stylesheets/css2.css" rel="stylesheet">
+    <link href="./lib/bootstrap-icons.css" rel="stylesheet">
+    <script src="./lib/bootstrap.bundle.min.js"></script>
+</head>
+<style>
+    mark{
+        background-color: #fff2ad;
+        outline: 0.1px solid grey;
+        padding: 0px;
+    }
+    .courier {
+        font-family: "Courier New";
+        letter-spacing: -0.04em;
+        line-height: 1.2;
+    }
+    #display{
+        text-wrap: none;
+        white-space: break-spaces;
+        border: 2px #757575 solid;
+        border-radius: 3px;
+        padding: 10px;
+    }
+</style>
+<body>
+    <br/><br/>
+    <div class="container-fluid">
+        <div class="row" style="width: 1600px;">
+            <div class="col">
+                <p class="h3">Editor</p>
+                <textarea class="courier" name="header" id="header" oninput="formatOnEdit(this.value)" rows="40" cols="80" spellcheck="false"></textarea>
+            </div>
+            <div class="col">
+                <p class="h3">Preview</p>                
+                <div class="courier" id="display" height="640px"></div>
+            </div>
+        </div>
+    </div>
+    
+</body>
+<script>
+    var g_orig_hdr = localStorage.getItem("ebcdic");
+    document.getElementById("header").innerHTML = g_orig_hdr;
+    // document.getElementById("display").innerText = g_orig_hdr;
+    setTimeout(() => {        
+        formatOnEdit(g_orig_hdr);
+    }, 1000);
+
+    function formatOnEdit(input){
+
+        let lines = input.split("\n");
+        
+        let formattedOutput = "";
+        for (let i = 1; i <= lines.length; i++) {
+            let line = lines[i-1];
+            if(i == 1)
+                formattedOutput += 
+                    line.slice(0,11)
+                        + "<mark data-bs-toggle='tooltip' data-bs-title='Client Name' data-bs-placement='bottom'>" 
+                        + line.slice(11,54) 
+                        + "</mark>" 
+                        + "<mark data-bs-toggle='tooltip' data-bs-title='Survey Type' data-bs-placement='bottom'>" 
+                        + line.slice(54,58) 
+                        + "</mark>" 
+                    + line.slice(58).padEnd(80-58)
+                    + "<br>";
+            else if(i == 2)
+                formattedOutput += 
+                    line.slice(0,9)
+                        + "<mark data-bs-toggle='tooltip' data-bs-title='Line' data-bs-placement='bottom'>" 
+                        + line.slice(9,20) 
+                        + "</mark>" 
+                    + line.slice(20,28) 
+                        + "<mark data-bs-toggle='tooltip' data-bs-title='Survey' data-bs-placement='bottom'>" 
+                        + line.slice(28,52) 
+                        + "</mark>" 
+                    + line.slice(52,58) 
+                        + "<mark data-bs-toggle='tooltip' data-bs-title='Area' data-bs-placement='bottom'>" 
+                        + line.slice(58,79) 
+                        + "</mark>" 
+                    + line.slice(79).padEnd(80-79)
+                    + "<br>";
+            else
+                formattedOutput += line.padEnd(80," ") + "<br>";
+            console.log(formattedOutput);
+        }
+
+        
+        document.getElementById("display").innerHTML = formattedOutput;
+
+        setTimeout(() => {
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));            
+        }, 100);
+    }
+</script>
+</html>
