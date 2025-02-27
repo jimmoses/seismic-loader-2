@@ -415,7 +415,10 @@
                             break;
                         case "deleteFile": 
                             deleteFiles(selectedFiles,w2ui.grid);
-                            break;                                                       
+                            break;
+                        case "w2ui-reload": 
+                            listCompletedFiles();
+                            break;                                                                          
                         default:
                             break;
                     }
@@ -484,7 +487,10 @@
                             break;
                         case "deletePendingUpload": 
                             deleteFiles(selectedFiles,w2ui.pendinguploadsgrid);
-                            break;                                                       
+                            break;  
+                        case "w2ui-reload": 
+                            listFiles();       
+                            break;                                         
                         default:
                             break;
                     }
