@@ -40,8 +40,18 @@
                         <button class="btn btn-secondary" type="button" onclick='getDirectoryListing(document.getElementById("g-current-path").value)'>Go</button>
                     </div>
                 </div>
+            </div>            
+        </div>
+        <div class="row">
+            <div class="col">
+                <div id="w2grd_file_selection"></div>
             </div>
-            <div class="col-3">
+            <div class="col">
+                <div id="w2grid_files_for_loading" style="height: 350px;"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-2">
                 <!-- File Type: 
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1">
@@ -59,18 +69,8 @@
                     </select>
                 </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                <div id="w2grd_file_selection"></div>
-            </div>
-            <div class="col">
-                <div id="w2grid_files_for_loading" style="height: 350px;"></div>
-            </div>
-        </div>
-        <div class="row">
             <div class="col-4">
-                <button type="button" class="btn btn-primary btn-sm" onclick="proceedForQC()">Proceed for QC & Edit</button>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="proceedForQC()">Proceed for QC & Edit</button>
             </div>
         </div>
     </div>
@@ -162,6 +162,13 @@
                 { field: 'modified', text: 'Last Modified', size: '40%' },
                 { field: 'created', text: 'Created', size: '90px' }
             ],
+            multiSearch: false,
+            searches: [             
+                { field: 'file_name', label: 'File Name', type: 'text' }
+            ],
+            defaultOperator : {
+                'text'    : 'contains'
+            },
             // records: [                
             //     {recid: 2, file_name: 'CY2021', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012', type: 'folder'},
             //     {recid: 3, file_name: 'CY2021_A', file_size: '200 GB', modified: '4/9/2012', created: '4/3/2012'},
@@ -235,6 +242,13 @@
                 onClick: function (target, data) {
                     change_page_mode("file_select");  
                 }
+            },
+            multiSearch: false,
+            searches: [             
+                { field: 'file_name', label: 'File Name', type: 'text' }
+            ],
+            defaultOperator : {
+                'text'    : 'contains'
             },
             header: '<b>Files Selected for Loading</>',
             // records: [{

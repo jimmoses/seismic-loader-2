@@ -21,7 +21,32 @@
                 <div class="col">
                     <div id="log_display_area" style="display:none">
                         <div id="grid2" style="display: inline-block; width: 100%; height: 200px;"></div>
-                        <div id="log_text" style="display: inline-block; width: 100%; height: 300px; overflow-y: scroll; border: 1px #e1e1e1 solid; border-radius: 3px; padding: 10px;">
+                        <div id="log_progress" style="display: inline-block; width: 100%; height: 293px; overflow-y: scroll; border: 1px #e1e1e1 solid; border-radius: 3px; padding: 10px;">
+                            <p class="h5">Pre-processing</p>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 100%">Completed</div>
+                            </div>
+                            <br>
+                            <p class="h5">Shape Generation</p>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 45%">In Progress</div>
+                            </div>
+                            <br>
+                            <p class="h5">Loading into Database</p>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+                            </div>
+                            <br>
+                            <!-- <p class="h5">Completed Successfully!</p> -->
+                        </div>    
+                    </div>
+                </div>
+            </div>
+            <div id="log_text_area" style="display: none;">                
+                <div class="row">
+                    <div class="col">
+                        <p class="h5" style="display: inline-block; width: 100%; border: 1px #e1e1e1 solid; border-radius: 3px 3px 0px 0px; padding: 10px; margin-bottom: 0px;">Detailed Log</p>
+                        <div id="log_text" style="display: inline-block; width: 100%; height: 300px; overflow-y: scroll; border: 1px #e1e1e1 solid; border-radius: 0px 0px 3px 3px ; padding: 10px;">
                             2025-02-07 14:36:14 INFO  User login successful: userID=12345<br>
                             2025-02-07 14:36:15 WARN  Disk space running low on server: serverID=67890<br>
                             2025-02-07 14:36:16 ERROR Failed to connect to database: dbID=54321<br>
@@ -49,19 +74,19 @@
                             2025-02-07 14:36:38 DEBUG Debugging mode enabled: debugID=33456<br>
                         </div>
                     </div>
-                </div>
-            </div>            
+                </div>            
+            </div>
         </div>
         
     </body>
 
     <script src="config/main.js"></script>
     <script>
-        let grid = new w2grid({
-            name: 'grid1',
+        let w2grd_joblist = new w2grid({
+            name: 'joblist',
             box: '#grid1',
             header: 'Files submited for loading',
-            show: { header: true },
+            show: { header: true, toolbar: true },
             columns: [
                 { field: 'recid', text: 'ID', size: '50px', sortable: true, attr: 'align=center' },
                 { field: 'fname', text: 'Filename', size: '100px', sortable: true },
@@ -69,12 +94,34 @@
                 { field: 'submitted_on', text: 'Submitted on', size: '100px' },
                 { field: 'status', text: 'Status', size: '120px', type: 'date', sortable: true }
             ],
+            multiSearch: true,
+            searches: [
+                { field: 'recid', label: 'ID ', type: 'int' },
+                { field: 'fname', label: 'Last Name', type: 'text' },
+                { field: 'path', label: 'First Name', type: 'text' },
+                { field: 'submitted_on', label: 'Email', type: 'text' },
+                { field: 'status', label: 'Start Date', type: 'date' }
+            ],
+            defaultOperator : {
+                'text'    : 'contains',
+                'number'  : '=',
+                'date'    : 'is',
+                'list'    : 'is',
+                'enum'    : 'in',
+                'hex'     : 'begins',
+                'color'   : 'begins'
+            },
             records: [
                 { recid: 1, fname: 'seis_test', path: '/tmp', status : 'In Progress', submitted_on: '4/3/2012' },
                 { recid: 6, fname: 'mum_seis', path: '/tmp', status : 'Completed', submitted_on: '4/10/2012' }
             ],
-            onClick(event) {
-                let record = this.get(event.detail.recid);
+            async onSelect (event) {
+                await event.complete;
+                let record = this.get(event.detail.clicked.recid);
+
+                //Fetch loading log from server and update
+                
+                //Update display
                 grid2.clear();
                 grid2.add([
                     { recid: 0, name: 'ID:', value: record.recid },
@@ -83,12 +130,17 @@
                     { recid: 4, name: 'Submitted on:', value: record.status},
                     { recid: 3, name: 'Status:', value: record.submitted_on },
                 ]);
-                if (record)
-                    document.getElementById("log_display_area").style="";
-                else
+
+                if (this.getSelection().length == 0){                    
                     document.getElementById("log_display_area").style="display:none";
+                    document.getElementById("log_text_area").style="display:none";                    
+                }
+                else{
+                    document.getElementById("log_display_area").style="";
+                    document.getElementById("log_text_area").style="";
+                }
             }
-        })
+        });
 
         let grid2 = new w2grid({
             name: 'grid2',
@@ -100,7 +152,7 @@
                 { field: 'name', text: 'Name', size: '100px', style: 'background-color: #efefef; border-bottom: 1px solid white; padding-right: 5px;', attr: "align=right" },
                 { field: 'value', text: 'Value', size: '100%' }
             ]
-        })
+        });
         
     </script>
     </html>

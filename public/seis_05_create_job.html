@@ -51,7 +51,7 @@
                         onchange=fetch_survey_list("fetch_srv_values")
                     `}
                 },
-                { field: 'seismic_survey_id', type: 'list',
+                { field: 'seismic_survey_id', type: 'list', hidden: false,
                     html: { span: 10, column: 0, group: 'Survey', label: 'Seismic Survey (ID)',
                     attr: `style = "width:40%"; 
                         onchange=fetch_datasets();fetch_crs_list();
@@ -61,6 +61,7 @@
                             onclick="
                                 w2frm_createjob.set('seismic_survey_id', {hidden: true }) ;                            
                                 w2frm_createjob.set('seismic_survey_new', {hidden: false }) ;
+                                w2frm_createjob.set('seismic_survey_new', {required: true}) ;
                                 w2frm_createjob.setValue('seismic_survey_new','');
                                 w2frm_createjob.refresh();
                                 fetch_crs_list(true);
@@ -73,6 +74,7 @@
                             onclick="
                                 w2frm_createjob.set('seismic_survey_id', {hidden: false }) ;                            
                                 w2frm_createjob.set('seismic_survey_new', {hidden: true }) ;
+                                w2frm_createjob.set('seismic_survey_new', {required: false}) ;
                                 fetch_crs_list(false);
                             ">Select Existing Survey</a>`}
                 },
@@ -309,6 +311,49 @@
             });
         }
 
+        //Function to create load job
+        function create_load_job(){
+
+            // Prepare POST request
+            const formData = new FormData();
+            formData.append('seismic_survey_id', w2frm_createjob.get("seismic_survey_id").hidden ? -1: w2frm_createjob.record.seismic_survey_id.id);
+            formData.append('seismic_survey', w2frm_createjob.get("seismic_survey_id").hidden ? w2frm_createjob.record.seismic_survey_new : "");
+            formData.append('crs_id', w2frm_createjob.record.crs.id);
+            formData.append('dataset_id', "select from mapping");
+
+            console.log('seismic_survey_id', w2frm_createjob.get("seismic_survey_id").hidden? -1: w2frm_createjob.record.seismic_survey_id.id);
+            console.log('seismic_survey', w2frm_createjob.get("seismic_survey_id").hidden ? w2frm_createjob.record.seismic_survey_new : "");
+            console.log('crs_id', w2frm_createjob.record.crs.id);
+            console.log('dataset_id', "select from mapping");
+
+            return;
+
+            //Send data to create job
+            fetch(g_apiUrl + "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);                
+            });
+        }
+        
+        
+        //When page is loaded, fetch list of datastore and projects
+        fetch_datastore_projects();
+        
+    </script>
+
+    <script desc="unused code">
         //Not in use
         function openCreateSurveyForm() {
             w2prompt({
@@ -345,9 +390,5 @@
             })
         }
 
-        
-        //When page is loaded, fetch list of datastore and projects
-        fetch_datastore_projects();
-        
     </script>
     </html>
