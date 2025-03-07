@@ -37,6 +37,7 @@
             margin-top: 5px;          
             margin-bottom: 5px;
         }
+        
         .status-bar .status-message {
             font-size: 0.8rem;
             font-style: italic;
@@ -45,6 +46,29 @@
         .status-bar .bytes-transferred{
             font-size: 0.8rem;
             
+        }
+
+        .file-selection-bar {
+            display: flex;
+            justify-content: space-between;  
+            margin-top: 5px;          
+            margin-bottom: 5px;
+        }
+
+
+        .file-selection-bar .add-file-button {
+            flex: 0.1;           
+        }
+
+        
+        .file-selection-bar .file-selection-result{
+            flex: 0.77;   
+        }
+        .file-selection-bar .show-queue-button{
+            flex: 0.1;   
+        }
+        .file-selection-bar .queue-badge{
+            flex: 0.03;   
         }
 
         .delete-icon {
@@ -79,10 +103,18 @@
         .drop-area {
             font-size: 0.9rem;
             border: 2px dashed #3b3e42;
-            padding: 30px;
+            padding: 5px;
             text-align: center;
             margin-bottom: 5px;
             cursor: pointer;
+            height: 100px;
+            overflow: auto;
+            
+        }
+
+        .current-file-label{
+            padding: 5px;
+            font-style: bold;
         }
 
         .text-medium{
@@ -112,7 +144,7 @@
                 <form class="d-flex " role="search">
                     <div class="input-group">
                         <span  class="input-group-text" style="font-size: 0.8rem;">Welcome</span>
-                        <input type="text" id="cpfNo" class="form-control" style="font-size: 0.8rem;" aria-label="CPF" aria-describedby="cpfNo">
+                        <input type="text" id="cpfNo" class="form-control" style="font-size: 0.8rem;" aria-label="CPF" aria-describedby="cpfNo" value="125363">
                     </div>  
                 </form>
             </div>
@@ -128,16 +160,25 @@
                     </div>
                 </div>-->
                 <div style="font-family:'OpenSans';color:#222021cc;border: 1px solid #efefef;border-bottom:0; padding: 5px">
-                    <b><i class="bi bi-file-earmark-plus"></i> New Upload </b>
+                    <b><i class="bi bi-file-earmark-arrow-up"></i> File Upload </b>
                 </div>
                 <div style="border: 1px solid #efefef;border-top:0; padding-left: 5px;padding-right: 5px">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <button class="btn btn-secondary" id="chooseFile" type="button" style="font-size: 0.8rem;"><i class="bi bi-file-earmark-arrow-up"></i> Choose File...</button>
-                        </div>
-                        <input type="text" class="form-control" placeholder="No file selected."  style="font-size: 0.8rem;" readonly id="selectedFileName" aria-label="" aria-describedby="basic-addon1">
+                    <div class="file-selection-bar">                       
+                        <button class="btn btn-secondary add-file-button" id="chooseFile" type="button" style="font-size: 0.8rem;"><i class="bi bi-file-earmark-plus"></i> Add Files...</button>
+                       
+                        <span class="file-selection-result" style="font-size: 0.8rem;border: 1px solid #efefef;padding: 5px">
+                            <span id="fileSelectionResult" class="text-secondary"></span>
+                        </span>                          
+                        <!--<input type="text" class="form-control" placeholder="No file selected."  style="font-size: 0.8rem;" readonly id="selectedFileName" aria-label="" aria-describedby="basic-addon1">-->
+                        <button class="btn btn-secondary show-queue-button" style="font-size: 0.8rem;" type="button" id="showQueue">
+                            <i class="bi bi-list-ul"></i> Upload Queue
+                        </button>
+                        <span class="input-group-text text-small queue-badge" id="queueBadge">0</span>
+                       
                     </div>
-                    <div id="fileError" class="text-danger mt-2 mb-2" style="font-size: 0.8rem;"></div>
+                    <div id="fileError" class="text-danger mt-2 mb-2" style="font-size: 0.8rem;">
+
+                    </div>
                     <div id="currentuploadtoolbar" style="width: 100%;margin-bottom: 5px; "></div>
                     
                     <div class="progress mb-1">
@@ -146,6 +187,7 @@
                         </div>
                     </div>
                     <div class="status-bar">
+                        
                         <span id="statusMessage" class="status-message"></span>
                         <span id="bytesTransferred" class="bytes-transferred"></span>
                     </div>
@@ -194,35 +236,128 @@
 
         <!-- File Selection Modal -->
         <div class="modal fade" style="display: none;" id="fileSelectionModal"  tabindex="-1" aria-labelledby="fileSelectionLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header bg-secondary">
-                    <span class="modal-title" id="fileSelectionLabel">Choose a file from your Computer</span>
+                    <span class="modal-title" id="fileSelectionLabel">Choose files from your Computer</span>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                    <div id="resumptionInfo" style="display: none;">
-                        <div class="alert alert-warning" style="word-wrap: break-word;" role="alert">
-                            <i class="bi bi-info-circle"></i> Important Information about Resuming Uploads<br>
-                            To resume a previously paused/interrupted upload, please reselect the same file. Even though our system remembers your upload progress, browsers do not allow automatic file selection for your privacy and security. This ensures that websites cannot access your files without your permission.
+                        <div class="text-center">
+                            <div class="drop-area" id="fileDrop" style="margin-left: 0;" ondragover="event.preventDefault()">Drag and drop files here</div>
+                                <!--<div class="drop-area" id="fileDrop" ondrop="handleDrop(event)" ondragover="event.preventDefault()">Drag and drop file here</div>-->
+                                
+                                <span style="font-size: 0.9rem">Or
+                                    <br>Use the File explorer below</span>
+                                
+                                <input class="form-control" style="font-size: 0.9rem" type="file" id="fileInput" multiple >
                             </div>
-                            <span>Please choose the file <strong id="resumptionFileLabel"></strong> again from your computer.</span>
-                    </div>   
-                    <div class="text-center">
-                        <div class="drop-area" id="fileDrop" ondragover="event.preventDefault()">Drag and drop file here</div>
-                        <!--<div class="drop-area" id="fileDrop" ondrop="handleDrop(event)" ondragover="event.preventDefault()">Drag and drop file here</div>-->
                         
-                        <span style="font-size: 0.9rem">Or
-                            <br>Use the File explorer below</span>
-                        
-                        <input class="form-control" style="font-size: 0.9rem" type="file" id="fileInput">
-                        </div>
-                        <div id="nameError" class="text-danger mt-2 mb-2" style="font-size: 0.8rem;display:none"></div>
-                    </div>                     
+                        </div>                     
                     
                     <div class="modal-footer">
                         <button type="button" class="btn btn-success" style="font-size: 0.9rem" id="selectFile" disabled>Select</button>
                         <button type="button" class="btn btn-secondary"  style="font-size: 0.9rem" data-bs-dismiss="modal">Cancel</button>                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Resumption Modal -->
+        <div class="modal fade" style="display: none;" id="fileResumptionModal"  tabindex="-1" aria-labelledby="fileResumptionLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-secondary">
+                    <span class="modal-title" id="fileResumptionLabel">Choose the file from your Computer</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning" style="word-wrap: break-word;" role="alert">
+                            <i class="bi bi-info-circle"></i> Important Information about Resuming Uploads<br>
+                            To resume a previously paused/interrupted upload, please reselect the same file. Even though our system remembers your upload progress, browsers do not allow automatic file selection for your privacy and security. This ensures that websites cannot access your files without your permission.
+                        </div>
+                        <span>Please choose the file <strong id="resumptionFileLabel"></strong> again from your computer.</span>
+                        <div class="text-center">
+                            <div class="drop-area" id="fileResumptionDrop" style="margin-left: 0;" ondragover="event.preventDefault()">Drag and drop the file here</div>
+                            <!--<div class="drop-area" id="fileDrop" ondrop="handleDrop(event)" ondragover="event.preventDefault()">Drag and drop file here</div>-->
+                            
+                            <span style="font-size: 0.9rem">Or
+                                <br>Use the File explorer below</span>
+                            
+                            <input class="form-control" style="font-size: 0.9rem" type="file" id="fileResumptionInput">
+                            </div>
+                            <div id="resumptionFileError" class="text-danger mt-2 mb-2" style="font-size: 0.8rem;display:none"></div>
+                        </div> 
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-success" style="font-size: 0.9rem" id="selectResumptionFile" disabled>Add to Queue</button>
+                        <button type="button" class="btn btn-secondary"  style="font-size: 0.9rem" data-bs-dismiss="modal">Cancel</button>                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap Modal for File Status Check -->
+        <div class="modal fade" id="fileStatusModal" tabindex="-1" aria-labelledby="fileStatusModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-secondary">
+                        <h5 class="modal-title text-medium" id="fileStatusModalLabel">File Status Check</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-bordered text-small">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Status</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fileStatusTableBody">
+                                <!-- Dynamic content will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary text-small" data-bs-dismiss="modal">Ok</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Upload Queue Modal -->
+        <div class="modal fade" id="queueModal" tabindex="-1" aria-labelledby="queueModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header  bg-secondary">
+                        <h5 class="modal-title  text-medium" id="queueModalLabel">Upload Queue</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!--<div class="mb-2">
+                            <button class="btn btn-primary btn-sm" onclick="moveUp()">Move Up</button>
+                            <button class="btn btn-primary btn-sm" onclick="moveDown()">Move Down</button>
+                            <button class="btn btn-danger btn-sm" onclick="removeFile()">Remove</button>
+                        </div>-->
+                        <div style="max-height: 400px;overflow-y: auto;">
+                            <table class="table table-bordered text-small">
+                                <thead>
+                                    <tr>                                       
+                                        <th style="width:40%">File Name</th>
+                                        <th style="width:10%">Size</th>
+                                        <th style="width:15%">Queue Status</th>
+                                        <th style="width:35%">Upload Progress</th>                                    
+                                    </tr>
+                                </thead>
+                                <tbody id="queueListTableBody">
+                                    <!-- Dynamic content will be inserted here -->
+                                </tbody>
+                            </table>   
+                        </div>                                             
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"  style="font-size: 0.9rem" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -233,7 +368,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header bg-secondary">
-                        <h5 class="modal-title" id="renameModalLabel">Rename File</h5>
+                        <h5 class="modal-title  text-medium" id="renameModalLabel">Rename File</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -274,14 +409,14 @@
                 <div class="modal-content">
                     <div class="modal-header  bg-secondary">
                         <span class="modal-title text-medium" id="stopConfirmationLabel">Confirm Stop Upload</span>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button id="stopModalCancelX" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <span class="text-medium">Are you sure you want to cancel this upload? This will stop the current upload and delete the partially uploaded file from server.</span>
                     </div>
                     <div class="modal-footer">                        
                         <button type="button" class="btn btn-danger text-small" id="confirmStopButton" >Yes, Cancel upload</button>
-                        <button type="button" class="btn btn-secondary text-small" data-bs-dismiss="modal">No, Go back</button>
+                        <button type="button" class="btn btn-secondary text-small" id="stopModalCancel" data-bs-dismiss="modal">No, Go back</button>
                     </div>
                 </div>
             </div>
@@ -505,6 +640,14 @@
             items: [
                 { type: 'button', id: 'startUpload', text: 'Start Upload', icon: 'bi bi-play-fill',disabled:true },  
                     { type: 'break' },              
+                
+                {type: 'html',  id: 'currentFilelabel',value:"",
+                    html(item) {
+                        let html =
+                            `<div class="current-file-label">${item.value}</span>`
+                        return html
+                    }
+                },
                 { type: 'spacer' },
                 { type: 'break' },    
                 { type: 'button', id: 'pauseUpload', text: 'Pause', icon: 'bi bi-pause-fill' },
@@ -520,22 +663,23 @@
                 //document.querySelector(`#${event.target}`).setAttribute("style","");
                 let content;
                 switch (event.target) {
-                    case "startUpload":                        
-                        updateButtonState('uploading');       
+                    case "startUpload": 
                         startOrResumeUpload(upload);
                         break;
                     case "pauseUpload":                        
                     if (upload) {
                         updateButtonState('paused');
-                        uploadFileId="";                       
+                        //uploadFileId="";                       
                         upload.abort();
+                        //progressBar.classList.add('progress-bar-warning')
+                       // progressBar.classList.remove('bg-success')
                         statusMessage.textContent = "Upload Paused";      
                         }
                         break;
                     case "resumeUpload":                        
                         if (upload) {
                             updateButtonState('uploading');
-                            uploadFileId=(upload.url).substring(((upload.url).lastIndexOf('/'))+1);                            
+                            //uploadFileId=(upload.url).substring(((upload.url).lastIndexOf('/'))+1);                            
                             startOrResumeUpload(upload);
                             statusMessage.textContent = "Resuming Upload...";                        
                         }
@@ -543,6 +687,11 @@
                     case "stopUpload":                        
                         if(upload)
                         {
+                            updateButtonState('paused');                        
+                            upload.abort();                        
+                            statusMessage.textContent = "Upload Paused"; 
+                            progressBar.classList.remove('bg-success');
+                            progressBar.classList.add('progress-bar-warning');
                             $('#stopConfirmationModal').modal('show');
                         }    
                         break;                                    
