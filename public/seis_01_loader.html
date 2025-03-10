@@ -22,6 +22,9 @@
         .progress-bar-secondary {
             background-color: #a7aeb7;
         }
+        .progress-bar-dark {
+            background-color: #66686a;
+        }
         .control-buttons {
             display: flex;
             justify-content: space-between;
@@ -37,6 +40,7 @@
             margin-top: 5px;          
             margin-bottom: 5px;
         }
+        
         .status-bar .status-message {
             font-size: 0.8rem;
             font-style: italic;
@@ -46,6 +50,29 @@
             font-size: 0.8rem;
             
         }
+
+        .file-selection-bar {
+            display: flex;
+            justify-content: space-between;  
+            margin-top: 5px;          
+            margin-bottom: 5px;
+        }
+
+
+        .file-selection-bar .add-file-button {
+            flex: 0.1;           
+        }
+
+        
+        .file-selection-bar .file-selection-result{
+            flex: 0.9;   
+        }
+        /*.file-selection-bar .show-queue-button{
+            flex: 0.1;   
+        }*/
+        /*.file-selection-bar .queue-badge{
+            flex: 0.03;   
+        }*/
 
         .delete-icon {
             cursor: pointer;
@@ -79,10 +106,18 @@
         .drop-area {
             font-size: 0.9rem;
             border: 2px dashed #3b3e42;
-            padding: 30px;
+            padding: 5px;
             text-align: center;
             margin-bottom: 5px;
             cursor: pointer;
+            height: 100px;
+            overflow: auto;
+            
+        }
+
+        .current-file-label{
+            padding: 5px;
+            font-style: bold;
         }
 
         .text-medium{
@@ -112,7 +147,7 @@
                 <form class="d-flex " role="search">
                     <div class="input-group">
                         <span  class="input-group-text" style="font-size: 0.8rem;">Welcome</span>
-                        <input type="text" id="cpfNo" class="form-control" style="font-size: 0.8rem;" aria-label="CPF" aria-describedby="cpfNo">
+                        <input type="text" id="cpfNo" class="form-control" style="font-size: 0.8rem;" aria-label="CPF" aria-describedby="cpfNo" value="125363">
                     </div>  
                 </form>
             </div>
@@ -128,24 +163,32 @@
                     </div>
                 </div>-->
                 <div style="font-family:'OpenSans';color:#222021cc;border: 1px solid #efefef;border-bottom:0; padding: 5px">
-                    <b><i class="bi bi-file-earmark-plus"></i> New Upload </b>
+                    <b><i class="bi bi-file-earmark-arrow-up"></i> File Upload </b>
                 </div>
                 <div style="border: 1px solid #efefef;border-top:0; padding-left: 5px;padding-right: 5px">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <button class="btn btn-secondary" id="chooseFile" type="button" style="font-size: 0.8rem;"><i class="bi bi-file-earmark-arrow-up"></i> Choose File...</button>
-                        </div>
-                        <input type="text" class="form-control" placeholder="No file selected."  style="font-size: 0.8rem;" readonly id="selectedFileName" aria-label="" aria-describedby="basic-addon1">
+                    <div class="file-selection-bar">                       
+                        <button class="btn btn-secondary add-file-button" id="chooseFile" type="button" style="font-size: 0.8rem;"><i class="bi bi-file-earmark-plus"></i> Add Files...</button>
+                       
+                        <span class="file-selection-result" style="font-size: 0.8rem;border: 1px solid #efefef;padding: 5px">
+                            <span id="fileSelectionResult" class="text-secondary"></span>
+                        </span>                          
+                        <!--<input type="text" class="form-control" placeholder="No file selected."  style="font-size: 0.8rem;" readonly id="selectedFileName" aria-label="" aria-describedby="basic-addon1">-->
+                        <!--<button class="btn btn-secondary show-queue-button" style="font-size: 0.8rem;" type="button" id="showQueue">
+                            <i class="bi bi-list-ul"></i> Upload Queue
+                        </button>-->
+                        <!--<span class="input-group-text text-small queue-badge" id="queueBadge">0</span>-->
+                       
                     </div>
-                    <div id="fileError" class="text-danger mt-2 mb-2" style="font-size: 0.8rem;"></div>
+                    <!--<div id="fileError" class="text-danger mt-2 mb-2" style="font-size: 0.8rem;"></div>-->
                     <div id="currentuploadtoolbar" style="width: 100%;margin-bottom: 5px; "></div>
                     
                     <div class="progress mb-1">
-                        <div id="uploadProgress" class="progress-bar progress-bar-animated progress-bar-striped bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                        <div id="uploadProgress" class="progress-bar progress-bar-animated progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
                             0%
                         </div>
                     </div>
                     <div class="status-bar">
+                        
                         <span id="statusMessage" class="status-message"></span>
                         <span id="bytesTransferred" class="bytes-transferred"></span>
                     </div>
@@ -164,6 +207,11 @@
                     <span id="bytesTransferred"></span>
                 </div>-->
             </div>    
+        </div>
+        <div class="row mt-2">
+            <div class="col-12">
+                <div id="queuegrid" style="width: 100%; height: 275px;"></div>
+            </div>
         </div>
         <div class="row mt-2">
             <div class="col-5">
@@ -194,31 +242,24 @@
 
         <!-- File Selection Modal -->
         <div class="modal fade" style="display: none;" id="fileSelectionModal"  tabindex="-1" aria-labelledby="fileSelectionLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header bg-secondary">
-                    <span class="modal-title" id="fileSelectionLabel">Choose a file from your Computer</span>
+                    <span class="modal-title" id="fileSelectionLabel">Choose files from your Computer</span>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                    <div id="resumptionInfo" style="display: none;">
-                        <div class="alert alert-warning" style="word-wrap: break-word;" role="alert">
-                            <i class="bi bi-info-circle"></i> Important Information about Resuming Uploads<br>
-                            To resume a previously paused/interrupted upload, please reselect the same file. Even though our system remembers your upload progress, browsers do not allow automatic file selection for your privacy and security. This ensures that websites cannot access your files without your permission.
+                        <div class="text-center">
+                            <div class="drop-area" id="fileDrop" style="margin-left: 0;" ondragover="event.preventDefault()">Drag and drop files here</div>
+                                <!--<div class="drop-area" id="fileDrop" ondrop="handleDrop(event)" ondragover="event.preventDefault()">Drag and drop file here</div>-->
+                                
+                                <span style="font-size: 0.9rem">Or
+                                    <br>Use the File explorer below</span>
+                                
+                                <input class="form-control" style="font-size: 0.9rem" type="file" id="fileInput" multiple >
                             </div>
-                            <span>Please choose the file <strong id="resumptionFileLabel"></strong> again from your computer.</span>
-                    </div>   
-                    <div class="text-center">
-                        <div class="drop-area" id="fileDrop" ondragover="event.preventDefault()">Drag and drop file here</div>
-                        <!--<div class="drop-area" id="fileDrop" ondrop="handleDrop(event)" ondragover="event.preventDefault()">Drag and drop file here</div>-->
                         
-                        <span style="font-size: 0.9rem">Or
-                            <br>Use the File explorer below</span>
-                        
-                        <input class="form-control" style="font-size: 0.9rem" type="file" id="fileInput">
-                        </div>
-                        <div id="nameError" class="text-danger mt-2 mb-2" style="font-size: 0.8rem;display:none"></div>
-                    </div>                     
+                        </div>                     
                     
                     <div class="modal-footer">
                         <button type="button" class="btn btn-success" style="font-size: 0.9rem" id="selectFile" disabled>Select</button>
@@ -228,12 +269,115 @@
             </div>
         </div>
 
+        <!-- File Resumption Modal -->
+        <div class="modal fade" style="display: none;" id="fileResumptionModal"  tabindex="-1" aria-labelledby="fileResumptionLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-secondary">
+                    <span class="modal-title" id="fileResumptionLabel">Choose the file from your Computer</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning" style="word-wrap: break-word;" role="alert">
+                            <i class="bi bi-info-circle"></i> Important Information about Resuming Uploads<br>
+                            To resume a previously paused/interrupted upload, please reselect the same file. Even though our system remembers your upload progress, browsers do not allow automatic file selection for your privacy and security. This ensures that websites cannot access your files without your permission.
+                        </div>
+                        <span>Please choose the file <strong id="resumptionFileLabel"></strong> again from your computer.</span>
+                        <div class="text-center">
+                            <div class="drop-area" id="fileResumptionDrop" style="margin-left: 0;" ondragover="event.preventDefault()">Drag and drop the file here</div>
+                            <!--<div class="drop-area" id="fileDrop" ondrop="handleDrop(event)" ondragover="event.preventDefault()">Drag and drop file here</div>-->
+                            
+                            <span style="font-size: 0.9rem">Or
+                                <br>Use the File explorer below</span>
+                            
+                            <input class="form-control" style="font-size: 0.9rem" type="file" id="fileResumptionInput">
+                            </div>
+                            <div id="resumptionFileError" class="text-danger mt-2 mb-2" style="font-size: 0.8rem;display:none"></div>
+                        </div> 
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-success" style="font-size: 0.9rem" id="selectResumptionFile" disabled>Add to Queue</button>
+                        <button type="button" class="btn btn-secondary"  style="font-size: 0.9rem" data-bs-dismiss="modal">Cancel</button>                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap Modal for File Status Check -->
+        <div class="modal fade" id="fileStatusModal" tabindex="-1" aria-labelledby="fileStatusModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header bg-secondary" style="padding: 10px;">
+                        <h5 class="modal-title text-medium" id="fileStatusModalLabel"><b><i class="bi bi-list-check"></i> File Selection Result</b></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <!--<div class="modal-body" style="max-height: 400px; overflow-y: auto;">-->
+                    <div class="modal-body" style="padding: 0px;">
+                        <div id="filestatusgrid" style="width: 100%;height:210px;"></div>
+                        <!--<table class="table table-bordered text-small">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40%;">File Name</th>
+                                    <th style="width: 20%;">Status</th>
+                                    <th style="width: 40%;">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fileStatusTableBody">
+                                 
+                            </tbody>
+                        </table>-->
+                    </div>
+                    <div class="modal-footer" style="padding: 0px;">
+                        <button type="button" class="btn btn-sm btn-secondary text-small  mr-auto" data-bs-dismiss="modal">Ok</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Upload Queue Modal -->
+        <!--<div class="modal fade" id="queueModal" tabindex="-1" aria-labelledby="queueModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header  bg-secondary">
+                        <h5 class="modal-title  text-medium" id="queueModalLabel">Upload Queue</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-2">
+                            <button class="btn btn-primary btn-sm" onclick="moveUp()">Move Up</button>
+                            <button class="btn btn-primary btn-sm" onclick="moveDown()">Move Down</button>
+                            <button class="btn btn-danger btn-sm" onclick="removeFile()">Remove</button>
+                        </div>
+                        <div style="max-height: 400px;overflow-y: auto;">
+                            <table class="table table-bordered text-small">
+                                <thead>
+                                    <tr>                                       
+                                        <th style="width:40%">File Name</th>
+                                        <th style="width:10%">Size</th>
+                                        <th style="width:15%">Queue Status</th>
+                                        <th style="width:35%">Upload Progress</th>                                    
+                                    </tr>
+                                </thead>
+                                <tbody id="queueListTableBody">
+                                   
+                                </tbody>
+                            </table>   
+                        </div>                                             
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"  style="font-size: 0.9rem" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+     -->
+
         <!-- Rename Input Modal -->
         <div class="modal fade" id="renameModal" tabindex="-1" aria-labelledby="renameModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header bg-secondary">
-                        <h5 class="modal-title" id="renameModalLabel">Rename File</h5>
+                        <h5 class="modal-title  text-medium" id="renameModalLabel">Rename File</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -268,34 +412,54 @@
                 </div>
             </div>
         </div>
+        <!-- Skip Confirmation Modal -->
+        <div class="modal fade" style="display: none;" id="skipConfirmationModal"  tabindex="-1" aria-labelledby="skipConfirmationModal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-secondary">
+                        <span class="modal-title text-medium" id="skipConfirmationLabel">Confirm Skip Upload</span>
+                        <button id="skipModalCancelX" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <span class="text-medium">Are you sure you want to skip this upload? This will stop the upload of current file while retaining the partial upload on the server for resumption in future.</span>
+                    </div>
+                    <div class="modal-footer">                        
+                        <button type="button" class="btn btn-danger text-small" id="confirmSkipButton" >Skip</button>
+                        <button type="button" class="btn btn-secondary text-small" id="skipModalCancel" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Stop Confirmation Modal -->
         <div class="modal fade" style="display: none;" id="stopConfirmationModal"  tabindex="-1" aria-labelledby="stopConfirmationLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header  bg-secondary">
                         <span class="modal-title text-medium" id="stopConfirmationLabel">Confirm Stop Upload</span>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button id="stopModalCancelX" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <span class="text-medium">Are you sure you want to cancel this upload? This will stop the current upload and delete the partially uploaded file from server.</span>
+                        <span class="text-medium">Are you sure you want to stop this upload? This will skip all the remaining files in the queue while retaining the partial uploads on the server for resumption in future.</span>
                     </div>
                     <div class="modal-footer">                        
-                        <button type="button" class="btn btn-danger text-small" id="confirmStopButton" >Yes, Cancel upload</button>
-                        <button type="button" class="btn btn-secondary text-small" data-bs-dismiss="modal">No, Go back</button>
+                        <button type="button" class="btn btn-danger text-small" id="confirmStopButton" >Stop </button>
+                        <button type="button" class="btn btn-secondary text-small" id="stopModalCancel" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>
             </div>
         </div>
         <!-- Deletion results modal -->
         <div class="modal fade" id="deletionResultsModal" tabindex="-1" aria-labelledby="deletionResultsLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-lg modal-dialog-centered ">
                 <div class="modal-content">
-                    <div class="modal-header bg-secondary">
+                    <div class="modal-header bg-secondary"  style="padding: 10px;">
                         <span class="modal-title text-medium" id="deletionResultsLabel">File Deletion Results</span>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>                
-                    <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-                        <table class="table table-bordered  text-small">
+                    <!--<div class="modal-body" style="max-height: 70vh; overflow-y: auto;">-->
+                    <div class="modal-body" style="padding: 0px;">
+                        <div id="deletionresultsgrid" style="width: 100%;height:210px;"></div>
+                        <!--<table class="table table-bordered  text-small">
                         <thead>
                             <tr>
                             <th></th>
@@ -305,15 +469,18 @@
                             </tr>
                         </thead>
                         <tbody id="deletionResultsBody"></tbody>
-                        </table>
-                    </div>   
+                        </table>-->
+                    </div> 
+                    <div class="modal-footer" style="padding: 0px;">
+                        <button type="button" class="btn btn-sm btn-secondary text-small mr-auto" data-bs-dismiss="modal">Ok</button>
+                    </div>  
                 </div>             
             </div>            
         </div>
 
         <!-- Rename Result Modal -->
         <div class="modal fade" id="renameResultModal" tabindex="-1" aria-labelledby="renameResultModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header bg-secondary">
                         <span class="modal-title text-medium" id="renameResultModalLabel">Rename Result</span>
@@ -342,7 +509,7 @@
                         </div>                          
                     </div>
                     <div class="modal-footer">                        
-                         <button type="button" class="btn btn-secondary text-small" data-bs-dismiss="modal">Cancel</button>                        
+                         <button type="button" class="btn btn-secondary text-small" data-bs-dismiss="modal">Ok</button>                        
                     </div>
                 </div>
             </div>
@@ -355,6 +522,157 @@
     
     <script src="./lib/w2ui/w2ui-2.0.min.js"></script>
     <script>
+        let queuegrid = new w2grid({
+            name: 'queuegrid',
+            box: '#queuegrid',
+            header: '<b><i class="bi bi-list-ul"></i> Upload Queue (<span class="text-small" id="queueBadge">0</span>)</b>',            
+            show: {
+                header: true,
+                //footer: true,
+                toolbar: true,
+               selectColumn: true,
+               recordTitles: true,
+               toolbarSearch: false, 
+               toolbarReload:false,
+               lineNumbers: true
+                //lineNumbers: true
+            },
+            
+            //url: 'data/list.json',
+            //method: 'GET', // need this to avoid 412 error on Safari
+            columns: [
+                { field: 'filename', text: 'File Name', size: '40%' },
+                { field: 'size', text: 'Size', size: '10%',tooltip:'Size' },
+                { field: 'status', text: 'Status', size: '15%',tooltip:'Status' },
+                { field: 'progress', text: 'Progress', size: '35%',tooltip:'Progress' }
+            ],
+            async onSelect(event) {
+               
+                await event.complete   
+                //event.preventDefault();
+                let selection = this.getSelection();
+                
+                if(selection.length==1){
+                    recId=selection[0];
+                    let queueStatus = w2ui.queuegrid.get(recId).queuestatus; 
+                    if(queueStatus===0){                        
+                        //The followin code takes advantage of the fact that recids in queuegrid are indices of the queue
+                        if(recId===0){// means this is the first item
+                            this.toolbar.disable('moveUp');
+                            this.toolbar.enable('moveDown','removeFromQueue'); 
+                        }                        
+                        else if(recId===(w2ui.queuegrid.records.length-1)){// means this is the last item
+                            this.toolbar.disable('moveDown');
+                            let aboveStatus=w2ui.queuegrid.get(recId-1).queuestatus; 
+                            if(aboveStatus>0){ // Means they are in progress or done processing i.e.Uploading, Completed, failed, or Skipped
+                                this.toolbar.disable('moveUp');
+                                this.toolbar.enable('removeFromQueue'); 
+                            }
+                            else{
+                                this.toolbar.enable('moveUp','removeFromQueue');
+                            }
+                            
+                        }                        
+                        else { // means this item is in somewhere middle
+                            let aboveStatus=w2ui.queuegrid.get(recId-1).queuestatus; 
+                            if(aboveStatus>0){ // Means they are in progress or done processing i.e.Uploading, Completed, failed, or Skipped
+                                this.toolbar.disable('moveUp');
+                                this.toolbar.enable('moveDown','removeFromQueue'); 
+                            }
+                            else{
+                                this.toolbar.enable('moveUp','moveDown','removeFromQueue');
+                            }                            
+                        }
+                    }
+                    else{
+                        this.toolbar.disable('moveUp','moveDown','removeFromQueue');
+                    }                                        
+                }
+                else if(selection.length>1){
+                    this.toolbar.disable('moveUp','moveDown');
+                    let queueStatuses=selection.map(entry => w2ui.queuegrid.get(entry).queuestatus); // w2ui record property which is not visible
+                    
+                    if(queueStatuses.includes(1)||queueStatuses.includes(2)||queueStatuses.includes(3)||queueStatuses.includes(4)){
+                        this.toolbar.disable('removeFromQueue');
+                    }
+                    else{
+                        this.toolbar.enable('removeFromQueue');
+                    }
+                    
+                }
+                else{
+                    this.toolbar.disable('moveUp','moveDown','removeFromQueue');
+                }
+
+
+                /*let recid=event.detail.clicked.recid;
+                if(recid){
+                    if(this.get(recid).queuestatus===0)
+                        console.log("Write Code to Select");
+                    else
+                        console.log("Write Code to not Select");
+                }*/
+            },            
+            toolbar: {
+                items: [                    
+                    { type: 'button', id: 'moveUp', text: 'Move Up', icon: 'bi bi-caret-up',disabled:true, tooltip:"Move Up" },
+                    { type: 'break' },                   
+                    { type: 'button', id: 'moveDown', text: 'Move Down', icon: 'bi bi-caret-down',disabled:true, tooltip:"Move Down" },
+                    { type: 'break' },
+                    { type: 'button', id: 'removeFromQueue', text: 'Remove', icon: 'bi bi-x',disabled:true, tooltip:"Remove" },
+                ],
+                async onClick(event) {                    
+                    selectedFiles=w2ui.queuegrid.getSelection();
+                    switch (event.target) {
+                        case "moveUp":                        
+                            moveUpInQueue(selectedFiles);
+                            break;
+                        case "moveDown": 
+                            moveDownInQueue(selectedFiles);
+                            break;
+                        case "removeFromQueue": 
+                            removeFromQueue(selectedFiles);
+                            break;                                                                          
+                        default:
+                            break;
+                    }
+                }
+            }            
+        });
+        let filestatusgrid = new w2grid({
+            name: 'filestatusgrid',
+            box: '#filestatusgrid',
+            //header: '<b><i class="bi bi-list-task"></i> File Selection Result</b>',            
+            show: {
+                header:false,
+                footer: true,               
+                recordTitles: true,
+                lineNumbers: true
+            },
+            columns: [
+                { field: 'filename', text: 'File Name', size: '35%' },
+                { field: 'status', text: 'Status', size: '15%',tooltip:'Status' },
+                { field: 'remarks', text: 'Remarks', size: '50%',tooltip:'Remarks' }
+            ],            
+        });
+
+        let deletionresultsgrid = new w2grid({
+            name: 'deletionresultsgrid',
+            box: '#deletionresultsgrid',
+            //header: '<b><i class="bi bi-list-task"></i> File Deletion Result</b>',            
+            show: {
+                header:false,
+                footer: true,               
+                recordTitles: true,
+                lineNumbers: true
+            },
+            columns: [
+                { field: 'filename', text: 'File Name', size: '35%' },
+                { field: 'status', text: 'Status', size: '15%',tooltip:'Status' },
+                { field: 'remarks', text: 'Remarks', size: '50%',tooltip:'Remarks' }
+            ],            
+        });
+
         let grid = new w2grid({
             name: 'grid',
             box: '#grid',
@@ -415,7 +733,10 @@
                             break;
                         case "deleteFile": 
                             deleteFiles(selectedFiles,w2ui.grid);
-                            break;                                                       
+                            break;
+                        case "w2ui-reload": 
+                            listCompletedFiles();
+                            break;                                                                          
                         default:
                             break;
                     }
@@ -484,7 +805,10 @@
                             break;
                         case "deletePendingUpload": 
                             deleteFiles(selectedFiles,w2ui.pendinguploadsgrid);
-                            break;                                                       
+                            break;  
+                        case "w2ui-reload": 
+                            listFiles();       
+                            break;                                         
                         default:
                             break;
                     }
@@ -499,13 +823,23 @@
             items: [
                 { type: 'button', id: 'startUpload', text: 'Start Upload', icon: 'bi bi-play-fill',disabled:true },  
                     { type: 'break' },              
+                
+                {type: 'html',  id: 'currentFilelabel',value:"",
+                    html(item) {
+                        let html =
+                            `<div class="current-file-label">${item.value}</span>`
+                        return html
+                    }
+                },
                 { type: 'spacer' },
                 { type: 'break' },    
                 { type: 'button', id: 'pauseUpload', text: 'Pause', icon: 'bi bi-pause-fill' },
                 { type: 'break' },
                 { type: 'button', id: 'resumeUpload', text: 'Resume', icon: 'bi bi-play-circle' },
                 { type: 'break' },
-                { type: 'button', id: 'stopUpload', text: 'Cancel Upload', icon: 'bi bi-stop-fill' },
+                { type: 'button', id: 'skipUpload', text: 'Skip', icon: 'bi bi-skip-forward' },
+                { type: 'break' },
+                { type: 'button', id: 'stopUpload', text: 'Stop', icon: 'bi bi-stop-fill' },
             ],
             async onClick(event) {
                 //console.log('Target: '+ event.target, event);
@@ -514,29 +848,54 @@
                 //document.querySelector(`#${event.target}`).setAttribute("style","");
                 let content;
                 switch (event.target) {
-                    case "startUpload":                        
-                        updateButtonState('uploading');       
+                    case "startUpload": 
                         startOrResumeUpload(upload);
                         break;
                     case "pauseUpload":                        
                     if (upload) {
                         updateButtonState('paused');
-                        uploadFileId="";                       
+                        //uploadFileId="";                       
                         upload.abort();
+                        //progressBar.classList.add('progress-bar-warning')
+                       // progressBar.classList.remove('bg-success')
                         statusMessage.textContent = "Upload Paused";      
                         }
                         break;
                     case "resumeUpload":                        
                         if (upload) {
                             updateButtonState('uploading');
-                            uploadFileId=(upload.url).substring(((upload.url).lastIndexOf('/'))+1);                            
+                            //uploadFileId=(upload.url).substring(((upload.url).lastIndexOf('/'))+1);                            
                             startOrResumeUpload(upload);
                             statusMessage.textContent = "Resuming Upload...";                        
                         }
                         break;
+                    case "skipUpload":                        
+                        if(upload)
+                        {
+                            upload.abort();    
+                            updateButtonState('paused');
+                            statusMessage.textContent = "Upload Paused"; 
+                            //progressBar.classList.remove('bg-success');
+                            progressBar.classList.add('progress-bar-warning');
+                            const queueProgressBar=document.getElementById("queueProgressBar");
+                            if(queueProgressBar){
+                                queueProgressBar.classList.add('progress-bar-warning');
+                            }
+                            $('#skipConfirmationModal').modal('show');
+                        }    
+                        break;    
                     case "stopUpload":                        
                         if(upload)
                         {
+                            updateButtonState('paused');                        
+                            upload.abort();                        
+                            statusMessage.textContent = "Upload Paused"; 
+                            //progressBar.classList.remove('bg-success');
+                            progressBar.classList.add('progress-bar-warning');
+                            const queueProgressBar=document.getElementById("queueProgressBar");
+                            if(queueProgressBar){
+                                queueProgressBar.classList.add('progress-bar-warning');
+                            }
                             $('#stopConfirmationModal').modal('show');
                         }    
                         break;                                    
