@@ -5,6 +5,7 @@ const fileError = document.getElementById('fileError');
 //const resumeButton = document.querySelector("#resumeUpload");
 const confirmDeleteButton = document.querySelector("#confirmDeleteButton");
 const confirmStopButton = document.querySelector("#confirmStopButton");
+const confirmSkipButton = document.querySelector("#confirmSkipButton");
 //const stopButton = document.getElementById('stopUpload');
 const chooseButton = document.getElementById('chooseFile');
 const statusMessage = document.getElementById('statusMessage');
@@ -12,13 +13,16 @@ const statusMessage = document.getElementById('statusMessage');
 const progressBar = document.getElementById('uploadProgress');
 const bytesTransferred = document.getElementById('bytesTransferred');
 const selectFileButton=document.getElementById('selectFile');
-const selectedFileLabel=document.getElementById('fileError');
+//const fileErrorLabel=document.getElementById('fileError');
 const fileDrop=document.getElementById('fileDrop');
 
 const showQueueButton=document.getElementById('showQueue');
 const queueBadge=document.getElementById('queueBadge');
 
 const cpfNoInput=document.getElementById('cpfNo');
+
+const skipModalCancelButton=document.getElementById('skipModalCancel');
+const skipModalCancelX=document.getElementById('skipModalCancelX');
 
 const stopModalCancelButton=document.getElementById('stopModalCancel');
 const stopModalCancelX=document.getElementById('stopModalCancelX');
@@ -74,7 +78,7 @@ var selectedFile = null;
 var selectedFiles=[];
 let selectedFileNames = [];
 fileInput.value="";
-selectedFileLabel.value="";
+//fileErrorLabel.value="";
 fileDrop.textContent = "Drag and drop files here";
 //selectFileButton.disabled=true;
 //resumptionFileError.style.display="none";
@@ -94,7 +98,7 @@ chooseButton.addEventListener("click", function() {
     fileInput.value="";    
     fileDrop.style.textAlign="center";
     fileDrop.textContent = "Drag and drop files here";
-    selectFileButton.disabled=true;
+    selectFileButton.disabled=true;    
     $('#fileSelectionModal').modal('show');
 })
 
@@ -196,8 +200,8 @@ selectResumptionFileButton.addEventListener('click', function (e) {
         .catch(error => console.error('Error checking file status:', error));
     }
 
-    /*if(selectedFileNames.length==1) selectedFileLabel.value=selectedFileNames[0];
-    else selectedFileLabel.value=`${selectedFileNames[0]} and ${(selectedFileNames.length-1)} more files se*lected.`;
+    /*if(selectedFileNames.length==1) fileErrorLabel.value=selectedFileNames[0];
+    else fileErrorLabel.value=`${selectedFileNames[0]} and ${(selectedFileNames.length-1)} more files se*lected.`;
     fileError.innerHTML = `<a href="#" data-toggle="modal" data-target="#fileStatusModal">View</a>`;*/
 
     //file = selectedFile; 
@@ -214,14 +218,14 @@ selectResumptionFileButton.addEventListener('click', function (e) {
                 statusMessage.textContent = "";
                 w2ui.currentuploadtoolbar.disable('startUpload');
                 selectedFile=null;
-                selectedFileLabel.value="";
+                fileErrorLabel.value="";
                 resetProgress();
                 break;
             case 2: fileError.innerHTML = `File "${selectedFile.name}" is currently being uploaded by another user.`;
                 statusMessage.textContent = "";
                 w2ui.currentuploadtoolbar.disable('startUpload');
                 selectedFile=null;
-                selectedFileLabel.value="";
+                fileErrorLabel.value="";
                 resetProgress();
                 break;  
             case 3: setupUpload(file,resp.data.metadata.filepartSizeInBytes,resp.data.size);
@@ -237,16 +241,17 @@ selectResumptionFileButton.addEventListener('click', function (e) {
 
 function populateFileSelectionResults(data)
 {
-    const tableBody = document.getElementById("fileStatusTableBody");
-    tableBody.innerHTML = "";
+    //const tableBody = document.getElementById("fileStatusTableBody");
+    //tableBody.innerHTML = "";
     let validCtr=0;
     let queueFlag=0;//This flag will be pplicable to cases where only one file is selected by user
+    var records =[]
     data.forEach(fileResponse => {
-        const row = document.createElement("tr");
+        //const row = document.createElement("tr");
         let queueMsg="";
         let textColor="";
         let queIcon="";  
-        tableBody.appendChild(row);                
+        //tableBody.appendChild(row);                
         if (fileResponse.status === 0||fileResponse.status === 1) {
             let validFile=selectedFiles.find(selectedFile=>selectedFile.name===fileResponse.fileName);
             if(validFile){                
@@ -255,7 +260,7 @@ function populateFileSelectionResults(data)
                 if(fileResponse.data.metadata){
                     let bytesUploaded=fileResponse.data.metadata.filepartSizeInBytes;
                     bytesTotal=fileResponse.data.size;
-                    percentage=((bytesUploaded / bytesTotal) * 100).toFixed(0);           
+                    percentage=Math.floor(((bytesUploaded / bytesTotal) * 100));           
                 }
                 let fileInQueue=fileQueue.find(entry => entry.file.name === validFile.name);
                 if(!fileInQueue){
@@ -288,12 +293,21 @@ function populateFileSelectionResults(data)
         else{
             queueMsg="Not added to Queue";textColor="text-danger";queIcon="x";
         }
-        row.innerHTML = `
+        /*row.innerHTML = `
             <td>${fileResponse.fileName}</td>
             <td class="${textColor}"><i class="bi bi-${queIcon}-circle"></i> ${queueMsg}</td>
             <td>${fileResponse.message}</td>
-        `;
-    });  
+        `;*/
+        let msg=`<i class="bi bi-${queIcon}-circle"></i> ${queueMsg}`;
+        records.push({filename:fileResponse.fileName,status:msg,remarks:fileResponse.message});
+        
+    });
+    w2ui.filestatusgrid.records=records; 
+    w2ui.filestatusgrid.refresh(); 
+    w2ui.filestatusgrid.scrollToColumn('remarks');
+    //w2ui.filestatusgrid.refreshBody();
+    //w2ui.filestatusgrid.update(); 
+    
     
     let respCodes=data.map(fileResponse => fileResponse.status);
     if(data.length==1){
@@ -446,13 +460,15 @@ function populateFileSelectionResults(data)
 }
 
 
-showQueueButton.addEventListener("click", function() {      
+/*showQueueButton.addEventListener("click", function() {      
     $('#queueModal').modal('show');
-})
+})*/
 
 function renderQueue(fileQueue) {
-    const queueList = document.getElementById("queueListTableBody");
-    queueList.innerHTML = "";    
+    //const queueList = document.getElementById("queueListTableBody");
+    //queueList.innerHTML = "";    
+    var records =[];
+    var rowCtr=0;
     fileQueue.forEach((queuedfile, index) => {
         const row = document.createElement("tr");
         /*let queueMsg="";
@@ -477,38 +493,34 @@ function renderQueue(fileQueue) {
 
         
         let uploadStatus="Waiting...";   
-        var percentage=queuedfile.queueStatus.progressPc;
+        let percentage=queuedfile.queueStatus.progressPc;
+        let progressbarClass="";
+        let progressBarId="";
+        let queueProgressPcId="";
         
         switch(queuedfile.queueStatus.statusCode)
         {
-            case 0: var progressHTML=
-            '<div style="display:flex"><div style="flex: 25%;">'
-            +percentage+'%'+
-            '</div><div class="progress mt-0" style="flex: 75%;"><div class="progress-bar progress-bar-striped bg-info" style="width: '+percentage+'%" aria-valuenow="'
-            +percentage+
-            '" aria-valuemin="0" aria-valuemax="100"></div></div></div>';break;
+            case 0: progressbarClass="progress-bar progress-bar-striped bg-info";
+                    rowCtr===0?uploadStatus=`<i class="bi bi-chevron-right"></i> Ready...`:uploadStatus=`<i class="bi bi-hourglass"></i> Waiting...`;  
+                    break;
 
-            case 1: var progressHTML=
-                '<div style="display:flex"><div style="flex: 25%;"><div id="queueProgressPc">'
-            +percentage+'%'+
-            '</div></div><div class="progress mt-0" style="flex: 75%;"><div id="queueProgressBar"  class="progress-bar progress-bar-striped bg-success" style="width: '+percentage+'%" aria-valuenow="'
-                +percentage+
-                '" aria-valuemin="0" aria-valuemax="100"></div></div></div>';
-                uploadStatus="Uploading...";break;
+            case 1: progressbarClass="progress-bar progress-bar-striped";
+                    uploadStatus=`<i class="bi bi-chevron-double-right"></i> Uploading...`;
+                    queueProgressPcId="queueProgressPc";
+                    progressBarId="queueProgressBar";
+                    break;
 
-            case 2:   var progressHTML=
-                `<div style="display:flex"><div style="flex: 25%;">
-                100%</div><div class="progress mt-0" style="flex: 75%;">
-                <div class="progress-bar" style="width:100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
-                </div></div></div>`;
-                uploadStatus="Complete";break;
+            case 2: progressbarClass="progress-bar progress-bar-striped bg-success";
+                    uploadStatus=`<i class="bi bi-check-circle"></i> Complete`;
+                    percentage=100;
+                    break; 
 
-            case 3:   var progressHTML=
-            `<div style="display:flex"><div style="flex: 25%;">
-            0%</div><div class="progress mt-0" style="flex: 75%;">
-            <div class="progress-bar bg-danger" style="width:100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
-            </div></div></div>`;           
-            uploadStatus="Cancelled";break;
+            case 3: progressbarClass="progress-bar progress-bar-striped  bg-warning";
+                    uploadStatus=`<i class="bi bi-x-circle"></i> Skipped`;
+                    break;
+            case 4: progressbarClass="progress-bar progress-bar-striped  bg-danger";
+                    uploadStatus=`<i class="bi bi-x-circle"></i> Upload failed`;
+                    break;          
         }
 
         
@@ -516,26 +528,46 @@ function renderQueue(fileQueue) {
         progressBar.textContent = Math.floor(percentage) + '%';
         progressBar.setAttribute('aria-valuenow', percentage);*/
 
-        row.innerHTML =`
+        /*row.innerHTML =`
             <td>${queuedfile.file.name}</td>            
             <td>${formatBytes(queuedfile.file.size)}</td>
             <td><span style="font-style: italic">${uploadStatus}</span></td>
             <td>${progressHTML}</td>
-        `;
-        row.onclick = () => {           
-            
-            row.querySelector("input").checked = true
-        };
-        queueList.appendChild(row);    
+        `;*/
+
+        progressHTML=
+            `<div style="display:flex">
+                <div style="flex: 20%;" id="${queueProgressPcId}">${percentage}%</div>
+                <div class="progress mt-0" style="flex: 80%;">
+                    <div class="${progressbarClass}" id="${progressBarId}" style="width:${percentage}%" 
+                        aria-valuemin="0" 
+                        aria-valuemax="100"
+                        aria-valuenow="${percentage}">
+                    </div>
+                </div>
+            </div>`;
+
+        records.push({recid:rowCtr,
+            filename:queuedfile.file.name,
+            size:formatBytes(queuedfile.file.size),
+            status:uploadStatus,
+            queuestatus:queuedfile.queueStatus.statusCode,
+            progress:progressHTML,            
+        });
+        rowCtr++;
     });
-    if(fileQueue.length){            
-        queueBadge.innerHTML=`${fileQueue.length}`;
-        queueBadge.style.display="block";
-    }    
-    else{        
-        queueBadge.innerHTML="0";
-        queueBadge.style.display="block";
-    }
+     //console.log( w2ui.grid.name);
+    //w2ui.grid.add(records);
+    //w2ui.grid.refresh();
+    //console.log( w2ui.grid.records);
+    w2ui.queuegrid.header=`<b><i class="bi bi-list-ul"></i> Upload Queue (<span class="text-small" id="queueBadge">${fileQueue.length}</span>)</b>`;    
+    w2ui.queuegrid.records=records;
+    w2ui.queuegrid.refresh();
+    w2ui.queuegrid.toolbar.disable('moveUp','moveDown','removeFromQueue');
+    w2ui.queuegrid.selectNone();
+   
+    
+    
     
 }
 
@@ -556,14 +588,17 @@ function setupUpload()
         var fileSizeInBytes=fileInfo.data.size;
     }
     
-    fileError.textContent = ''; // Clear the error message
+    
     //currentUploadFilename.textContent = file.name;
     if(filepartSizeInBytes&&fileSizeInBytes)
     {
-        var pcCompleted=Math.floor((filepartSizeInBytes)*100/(fileSizeInBytes));
+        var pcCompleted=Math.floor((filepartSizeInBytes/fileSizeInBytes)*100);
         progressBar.style.width = pcCompleted + '%';
-        progressBar.textContent = Math.floor(pcCompleted) + '%';
+        progressBar.textContent = pcCompleted + '%';
         progressBar.setAttribute('aria-valuenow', pcCompleted);
+        progressBar.classList.remove('progress-bar-warning')
+        progressBar.classList.remove("progress-bar-dark"); 
+        progressBar.classList.add("progress-bar-animated");
         statusMessage.textContent = "Ready to upload. Shall resume from previously attempted upload.";
     }
     else
@@ -572,6 +607,8 @@ function setupUpload()
         statusMessage.textContent = "Ready to upload...";
     }        
     let queuedfile=fileQueue.find(entry=>entry.file.name===file.name);
+ 
+    
     // Create a new tus upload
     upload = new tus.Upload(file, {
         // Endpoint is the upload creation URL from your tus server
@@ -588,38 +625,67 @@ function setupUpload()
         onError: function (error) {
             console.error("Upload failed:", error);
             //alert("Upload failed.");
-            statusMessage.textContent = `Upload Failed : ${file.name}`;
+            //statusMessage.textContent = `Upload Failed : ${file.name}`;
+
+            if(upload){
+                var queueCurrItem = fileQueue.find(entry => entry.file.name === upload.file.name);
+                queueCurrItem.queueStatus.statusCode=4;
+            }            
+
+            if(validFiles.length)
+            {
+                statusMessage.textContent = "File "+file.name+" failed to upload. Starting upload of next file...";
+                setupUpload();
+                startOrResumeUpload(upload)
+            }
+            else{
+                w2ui.currentuploadtoolbar.set('currentFilelabel',{value:''});
+                if(fileQueue.length>1){
+
+                    let queueStatuses=fileQueue.map(entry => entry.queueStatus.statusCode);
+                    let queueSuccess=queueStatuses.filter((entry)=>{return entry===2});
+                    statusMessage.textContent = `${queueSuccess.length} of ${fileQueue.length} files have been uploaded successfully.`;
+                }
+                else{
+                    statusMessage.textContent = "File "+file.name+" failed to upload.";     
+                } 
+                              
+                renderQueue(fileQueue);  
+                fileQueue=[];
+                validFiles=[];
+                lastUpload=upload;
+                upload=null; 
+                updateButtonState('idle');
+
+            }
         },
         // Callback for reporting upload progress
         onProgress: function (bytesUploaded, bytesTotal) {
-            var percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2)
-            var percentageWhole = ((bytesUploaded / bytesTotal) * 100).toFixed(0)
-            console.log(bytesUploaded, bytesTotal, percentage + '%')
-
-            progressBar.style.width = percentage + '%';
-            progressBar.textContent = Math.floor(percentage) + '%';
-            progressBar.setAttribute('aria-valuenow', percentage);
-            
+            //var percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2)
+            var percentage = Math.floor(((bytesUploaded / bytesTotal) * 100));
+            //console.log(bytesUploaded, bytesTotal, percentage + '%')
 
             const queueProgressBar=document.getElementById("queueProgressBar");
-            if(queueProgressBar)
-            {
-                queueProgressBar.style.width = percentage + '%';
-                queueProgressBar.textContent = Math.floor(percentage) + '%';
-                queueProgressBar.setAttribute('aria-valuenow', percentage);
-            }
-            
-            // Update status and bytes transferred
-            //currentUploadFilename.textContent = file.name;
             const queueProgressPc=document.getElementById("queueProgressPc");
             if(queueProgressPc)
-            {
-                if(queuedfile)queuedfile.queueStatus.progressPc=percentageWhole;
-                queueProgressPc.textContent=percentageWhole + '%';
+                queueProgressPc.textContent=percentage + '%';           
+           
+            if(queuedfile)
+                queuedfile.queueStatus.progressPc=percentage;
+
+            if(queueProgressBar){
+                queueProgressBar.style.width = percentage + '%';
+                //queueProgressBar.textContent = Math.floor(percentage) + '%';
+                queueProgressBar.setAttribute('aria-valuenow', percentage);
             }
-           
+
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = percentage + '%';
+            progressBar.setAttribute('aria-valuenow', percentage);
             
-           
+            
+            // Update status and bytes transferred
+            //currentUploadFilename.textContent = file.name;   
             
             statusMessage.textContent = `Uploading...`;
             bytesTransferred.textContent = `${formatBytes(bytesUploaded)}  out of ${formatBytes(bytesTotal)}  transferred`;
@@ -658,7 +724,7 @@ function setupUpload()
 
                     let queueStatuses=fileQueue.map(entry => entry.queueStatus.statusCode);
                     let queueSuccess=queueStatuses.filter((entry)=>{return entry===2});
-                    console.log(queueSuccess);
+                    //console.log(queueSuccess);
                     if(queueSuccess.length===fileQueue.length)
                         statusMessage.textContent = "All "+fileQueue.length+" files have been uploaded successfully.";
                     else
@@ -721,7 +787,13 @@ function startOrResumeUpload(upload) {
         renderQueue(fileQueue);
         // Start the upload
        progressBar.classList.remove('progress-bar-warning')
-       progressBar.classList.add('bg-success')
+       progressBar.classList.remove("progress-bar-dark"); 
+       progressBar.classList.add("progress-bar-animated");
+       const queueProgressBar=document.getElementById("queueProgressBar");
+       if(queueProgressBar){
+           queueProgressBar.classList.remove('progress-bar-warning');
+       }
+       //progressBar.classList.add('bg-success')
        fileSelectionResult.className="";
        fileSelectionResult.innerHTML="";
        updateButtonState('uploading');
@@ -732,10 +804,23 @@ function startOrResumeUpload(upload) {
 function resetProgress() {
     progressBar.style.width = '0%';
     progressBar.textContent = '0%';
-    progressBar.setAttribute('aria-valuenow', 0);
+    progressBar.setAttribute('aria-valuenow', 0);   
+    progressBar.classList.remove("progress-bar-dark"); 
+    progressBar.classList.remove('progress-bar-warning')
+    progressBar.classList.add("progress-bar-animated");
     bytesTransferred.textContent = '';
     
     
+}
+
+function endProgress() {
+    progressBar.style.width = '100%';
+    progressBar.textContent = '';
+    progressBar.setAttribute('aria-valuenow', 100);
+    progressBar.classList.add("progress-bar-dark"); 
+    progressBar.classList.remove("progress-bar-animated");  
+    progressBar.classList.remove('progress-bar-warning');  
+    bytesTransferred.textContent = '';
 }
 
 // Add listeners for the pause and unpause button
@@ -789,28 +874,42 @@ stopButton.addEventListener("click", function() {
     
 })*/
 
-stopModalCancelX.addEventListener("click", function() {
-    if (upload) {
-        updateButtonState('uploading');
-        
-        startOrResumeUpload(upload);
-        statusMessage.textContent = "Resuming Upload...";
-        progressBar.classList.add("bg-success");
-        progressBar.classList.remove("progress-bar-warning");
-    }
-});
+skipModalCancelX.addEventListener("click", resumeOnCancelModal);
 
-stopModalCancelButton.addEventListener("click", function() {
+skipModalCancelButton.addEventListener("click", resumeOnCancelModal);
+
+stopModalCancelX.addEventListener("click", resumeOnCancelModal);
+
+stopModalCancelButton.addEventListener("click", resumeOnCancelModal);
+
+function resumeOnCancelModal() {
     if (upload) {
         updateButtonState('uploading');
         
         startOrResumeUpload(upload);
         statusMessage.textContent = "Resuming Upload...";
-        progressBar.classList.add("bg-success");
+        //progressBar.classList.add("bg-success");
         progressBar.classList.remove("progress-bar-warning");
-    
+        const queueProgressBar=document.getElementById("queueProgressBar");
+       if(queueProgressBar){
+           queueProgressBar.classList.remove('progress-bar-warning');
+       }
     }
-});
+}
+
+
+confirmSkipButton.addEventListener("click", function() {
+
+    $('#skipConfirmationModal').modal('hide');
+    upload.abort();
+    statusMessage.textContent = "Upload Cancelled";
+    resetProgress();    
+    //deleteFile(upload.url);
+    skipFile();
+    updateButtonState('stopped');
+    //clearFileInput();
+    
+})
 
 
 confirmStopButton.addEventListener("click", function() {
@@ -819,18 +918,78 @@ confirmStopButton.addEventListener("click", function() {
     upload.abort();
     statusMessage.textContent = "Upload Cancelled";
     resetProgress();    
-    deleteFile(upload.url);
-    updateButtonState('stopped');
+    //deleteFile(upload.url);
+    stopAll();
+    //updateButtonState('stopped');
     //clearFileInput();
     
 })
+
     
 
 
+function skipFile() {    
+    if(upload){
+        
+        var queueCurrItem = fileQueue.find(entry => entry.file.name === upload.file.name);
+        queueCurrItem.queueStatus.statusCode=3; // Status Code 3 means aborted                    
+        if(validFiles.length)
+        {
+            statusMessage.textContent = "Upload for file "+upload.file.name+" has been skipped. Starting upload of next file...";
+            setupUpload();
+            startOrResumeUpload(upload);
+            
+        }
+        else{
+            let queueStatuses=fileQueue.map(entry => entry.queueStatus.statusCode);
+            let queueSuccess=queueStatuses.filter((entry)=>{return entry===2});                        
+            if(queueSuccess.length===fileQueue.length)
+                statusMessage.textContent = "All "+fileQueue.length+" files have been uploaded successfully.";
+            else
+                statusMessage.textContent = `Upload Skipped for file "${upload.file.name}". ${queueSuccess.length} of ${fileQueue.length} files have been uploaded successfully.`;
 
-//window.addEventListener('load', clearFileInput);
-updateButtonState('idle');
-//listFiles();
+            //statusMessage.textContent = "Upload Cancelled";                        
+            resetProgress();
+            renderQueue(fileQueue);  
+            fileQueue=[];
+            validFiles=[];
+            lastUpload=upload;                       
+            upload=null; 
+            updateButtonState('idle');
+        }   
+    }  
+}
+
+function stopAll() {
+    if(upload){        
+        var queueCurrItem = fileQueue.find(entry => entry.file.name === upload.file.name);
+        queueCurrItem.queueStatus.statusCode=3; // Status Code 3 means aborted   
+
+        let currIndex=fileQueue.indexOf(queueCurrItem);
+
+        //Set Status code 3 for all remaining files
+        for(;currIndex<fileQueue.length;++currIndex){ // Note the smart use of ++currIndex instead of currIndex++ ;)
+            fileQueue[currIndex].queueStatus.statusCode=3;
+        }
+       
+        let queueStatuses=fileQueue.map(entry => entry.queueStatus.statusCode);
+        let queueSuccess=queueStatuses.filter((entry)=>{return entry===2});                        
+        statusMessage.textContent = `Upload stopped. ${queueSuccess.length} of ${fileQueue.length} files have been uploaded successfully.`;
+
+        w2ui.currentuploadtoolbar.set('currentFilelabel',{value:""});
+        //statusMessage.textContent = "Upload Cancelled";                        
+        //resetProgress();
+        endProgress();
+        renderQueue(fileQueue);  
+        fileQueue=[];
+        validFiles=[];
+        lastUpload=upload;                       
+        upload=null; 
+        updateButtonState('idle');
+    }  
+}
+
+
 
 function formatBytes(bytes, decimals = 2) {
     if (bytes === 0) return '0 Bytes';
@@ -848,7 +1007,7 @@ function formatBytes(bytes, decimals = 2) {
 }*/
 
 // Function to delete an uploaded file using fetch
-function deleteFile(uploadUrl) {
+/*function deleteFile(uploadUrl) {
     //console.log(fileName);
     fetch(uploadUrl, {
         method: 'DELETE',
@@ -861,16 +1020,16 @@ function deleteFile(uploadUrl) {
                 console.log('File deleted successfully');                 
                 if(upload)
                 {
-                    /*const currUploadFileId=(upload.url).substring(((upload.url).lastIndexOf('/'))+1);// File being uploaded currently
-                    const fileToDeleteId=uploadUrl.substring(((uploadUrl).lastIndexOf('/'))+1);
-                    if(currUploadFileId==fileToDeleteId)
-                    {
-                        //clearFileInput();
-                        statusMessage.textContent = "Upload Cancelled";                        
-                        resetProgress();
-                    }*/
+                    //const currUploadFileId=(upload.url).substring(((upload.url).lastIndexOf('/'))+1);// File being uploaded currently
+                    //const fileToDeleteId=uploadUrl.substring(((uploadUrl).lastIndexOf('/'))+1);
+                    //if(currUploadFileId==fileToDeleteId)
+                    //{
+                       // //clearFileInput();
+                      //  statusMessage.textContent = "Upload Cancelled";                        
+                      //  resetProgress();
+                   // }
                     var queueCurrItem = fileQueue.find(entry => entry.file.name === upload.file.name);
-                    queueCurrItem.queueStatus.statusCode=3; // Status Code 3 means aborted
+                    queueCurrItem.queueStatus.statusCode=3; // Status Code 3 means aborted                    
                     if(validFiles.length)
                     {
                         statusMessage.textContent = "Upload Cancelled for file "+upload.file.name+" has been cancelled. Starting upload of next file...";
@@ -905,7 +1064,7 @@ function deleteFile(uploadUrl) {
         .catch((error) => {
             console.error('Error deleting file:', error);
         });
-}
+}*/
 
 function updateButtonState(status) {
     
@@ -913,22 +1072,22 @@ function updateButtonState(status) {
     //
     switch (status) {
         case 'idle': // No upload in progress
-            w2ui.currentuploadtoolbar.disable('startUpload','pauseUpload','resumeUpload','stopUpload');
+            w2ui.currentuploadtoolbar.disable('startUpload','pauseUpload','resumeUpload','skipUpload','stopUpload');
             break;
         case 'uploading': // Upload in progress
             w2ui.currentuploadtoolbar.disable('startUpload','resumeUpload');
-            w2ui.currentuploadtoolbar.enable('pauseUpload','stopUpload');           
+            w2ui.currentuploadtoolbar.enable('pauseUpload','skipUpload','stopUpload');           
             break;
         case 'paused': // Upload paused
             w2ui.currentuploadtoolbar.disable('pauseUpload','startUpload');
-            w2ui.currentuploadtoolbar.enable('resumeUpload','stopUpload');            
+            w2ui.currentuploadtoolbar.enable('resumeUpload','skipUpload','stopUpload');            
             break;
         case 'completed': // Upload completed
-            w2ui.currentuploadtoolbar.disable('pauseUpload','resumeUpload','stopUpload');
+            w2ui.currentuploadtoolbar.disable('pauseUpload','resumeUpload','skipUpload','stopUpload');
             w2ui.currentuploadtoolbar.enable('startUpload',);
             break;
         case 'stopped': // Upload stopped
-            w2ui.currentuploadtoolbar.disable('pauseUpload','resumeUpload','stopUpload');
+            w2ui.currentuploadtoolbar.disable('pauseUpload','resumeUpload','skipUpload','stopUpload');
             w2ui.currentuploadtoolbar.enable('startUpload',);            
             break;
     }
@@ -953,7 +1112,7 @@ function listFiles(){
                 
                 if(uploadStatus=="Interrupted"&&!fileInQueue)
                 {                        
-                    var pcCompleted=Math.floor((file.fileSizeInBytes)*100/(file.metadata.size));
+                    var pcCompleted=Math.floor(((file.fileSizeInBytes)/(file.metadata.size))*100);
                     //var creationdate= new Date(file.metadata.creation_date);                       
                     //var creationDateStr=creationdate.toLocaleDateString()+ " "+creationdate.toLocaleTimeString();
                     var updationDate= new Date(file.fileUpdatedAt);   
@@ -1034,6 +1193,128 @@ function listCompletedFiles(){
         });
         
 }
+
+
+function moveUpInQueue(fileList)
+{ 
+    if(fileList.length==1){ 
+        const recId = fileList[0];
+        const theFileRecord = w2ui.queuegrid.get(recId);
+        const queueStatus = theFileRecord.queuestatus;
+        /*Second factor verification of status as upload may start between row selection and button click*/
+        if(queueStatus===0)
+        {   //The followin code takes advantage of the fact that recids in queuegrid are indices of the queue
+            if(recId===0){// means this is the first item, though a highly unlikely situation
+                //console.log("Do Nothing1");
+                //Do nothing
+            }                        
+            else {// means this is the middle or last item                
+                let aboveStatus=w2ui.queuegrid.get(recId-1).queuestatus; 
+                if(aboveStatus>0){ // Check again if they are in progress or done processing i.e.Uploading, Completed, failed, or Skipped
+                    //console.log("Do Nothing2");
+                    //Do Nothing
+                }
+                else{                 
+                    let theFile=validFiles.find(entry=>entry.file.name===theFileRecord.filename); 
+                    if(theFile)  {// Not yet validFiles.shift()
+                        let theFileIndex=validFiles.indexOf(theFile);
+                        [validFiles[theFileIndex], validFiles[theFileIndex - 1]] = [validFiles[theFileIndex - 1], validFiles[theFileIndex]];
+                        [fileQueue[recId], fileQueue[recId - 1]] = [fileQueue[recId - 1], fileQueue[recId]];
+                        renderQueue(fileQueue);
+                        w2ui.queuegrid.select(recId-1)
+                        //console.log(validFiles);
+                    }
+                    else{
+                        //console.log("Do Nothing2.5");
+                    }
+                    
+                }                
+            } 
+        }
+        else{
+            //console.log("Do Nothing3");
+            //Do Nothing
+        }
+    }
+    else{
+        //console.log("Do Nothing4");
+        //Do Nothing
+    }
+}
+
+function moveDownInQueue(fileList)
+{ 
+    if(fileList.length==1){  
+        const recId = fileList[0];
+        const theFileRecord = w2ui.queuegrid.get(recId);
+        const queueStatus = theFileRecord.queuestatus;
+        /*Second factor verification of status as upload may start between row selection and button click*/
+        if(queueStatus===0)
+        {   //The followin code takes advantage of the fact that recids in queuegrid are indices of the queue
+            if(recId===(w2ui.queuegrid.records.length-1)){// means this is the last item, though a highly unlikely situation
+                //console.log("Do Nothing1");
+                //Do nothing
+            }                        
+            else {// means this is the middle or first item 
+                let theFile=validFiles.find(entry=>entry.file.name===theFileRecord.filename); 
+                if(theFile)  {// Not yet validFiles.shift()
+                    let theFileIndex=validFiles.indexOf(theFile);
+                    [validFiles[theFileIndex], validFiles[theFileIndex + 1]] = [validFiles[theFileIndex + 1], validFiles[theFileIndex]];
+                    [fileQueue[recId], fileQueue[recId + 1]] = [fileQueue[recId + 1], fileQueue[recId]];
+                    renderQueue(fileQueue);
+                    w2ui.queuegrid.select(recId+1)
+                    //console.log("Code to Move down");   
+                    //console.log(validFiles);   
+                }
+                else{
+                     //console.log("Do Nothing2");
+                    //Do Nothing
+                }                        
+            } 
+        }
+        else{
+            //console.log("Do Nothing3");
+            //Do Nothing
+        }
+    }
+    else{
+        //console.log("Do Nothing4");
+        //Do Nothing
+    }
+}
+
+
+function removeFromQueue(fileList) {    
+    fileList.forEach(recId=>{
+        const theFileRecord = w2ui.queuegrid.get(recId);
+        const queueStatus = theFileRecord.queuestatus;
+        /*Second factor verification of status as upload may start between row selection and button click*/
+        if(queueStatus===0){   //The followin code takes advantage of the fact that recids in queuegrid are indices of the queue
+            let theFile=validFiles.find(entry=>entry.file.name===theFileRecord.filename);            
+            if(theFile)  {// Not yet validFiles.shift()   
+                let theFileIndex=validFiles.indexOf(theFile); 
+                validFiles.splice(theFileIndex,1);             
+                fileQueue.splice(recId, 1);
+                
+                renderQueue(fileQueue);
+                fileSelectionResult.className="";
+                fileSelectionResult.innerHTML="";
+                if(upload){
+                    let queueCurrItem = fileQueue.find(entry => entry.file.name === upload.file.name);                    
+                    let fileNum=(fileQueue.indexOf(queueCurrItem))+1;
+                    let currFileLabel=`File ${fileNum} of ${fileQueue.length} : ${upload.file.name}`;
+                    w2ui.currentuploadtoolbar.set('currentFilelabel',{value:currFileLabel});
+                }                
+            }
+        }
+        else{
+             //console.log("Do Nothing4");
+            //Do Nothing
+        }
+    });
+    
+}
+
 
 
 function resumeFromList(fileList)
@@ -1178,7 +1459,7 @@ renameButton.addEventListener("click", async function() {
             if(currUploadFileName==result.filename&&result.status === 'Success'){
                // clearFileInput();
                 statusMessage.textContent = "";                
-                selectedFileLabel.value="";
+                //fileErrorLabel.value="";
                 w2ui.currentuploadtoolbar.set('currentFilelabel',{value:""});
                 //selectFileButton.disabled=true;
                 //fileDrop.style.textAlign="center";
@@ -1252,7 +1533,7 @@ confirmDeleteButton.addEventListener("click", async function() {
                 fileResult = result.find(entry => entry.file === currUploadFileName);
                 if(fileResult&&fileResult.status === 'Success'){
                     statusMessage.textContent = fileGridName==='pendinguploadsgrid'?"Upload Cancelled":"";       
-                    selectedFileLabel.value="";
+                    //fileErrorLabel.value="";
                     w2ui.currentuploadtoolbar.set('currentFilelabel',{value:""});
                     resetProgress();
                     renderQueue(fileQueue);
@@ -1267,7 +1548,7 @@ confirmDeleteButton.addEventListener("click", async function() {
                 fileResult = result.find(entry => entry.file === currUploadFileId);
                 if(fileResult&&fileResult.status === 'Success'){
                     statusMessage.textContent = fileGridName==='pendinguploadsgrid'?"Upload Cancelled":"";       
-                    selectedFileLabel.value="";    
+                    fileErrorLabel.value="";    
                     w2ui.currentuploadtoolbar.set('currentFilelabel',{value:""});                    
                     resetProgress();
                     renderQueue(fileQueue);
@@ -1297,8 +1578,9 @@ confirmDeleteButton.addEventListener("click", async function() {
 
 // Function to display the deletion results in a Bootstrap modal
 function displayDeletionResults(results,fileGridName) {
-    const modalBody = document.getElementById('deletionResultsBody');
-    modalBody.innerHTML = '';   
+    //const modalBody = document.getElementById('deletionResultsBody');
+    //modalBody.innerHTML = '';   
+    let records=[];
     results.forEach(({ file, status, remarks }) => {
       const icon = status === 'Success' ? 'check-circle' : 'x-circle';
       const rowClass = status === 'Success' ? 'success' : 'danger';
@@ -1311,17 +1593,28 @@ function displayDeletionResults(results,fileGridName) {
                 break;
             default:break;
         }  
-      const row = `
+      /*const row = `
         <tr>
           <td class="${rowClass}"><i class="bi bi-${icon}"></i></td>
           <td>${fileName}</td>
           <td>${status}</td>
           <td>${remarks}</td>
         </tr>
-      `;
+      `;*/
   
-      modalBody.insertAdjacentHTML('beforeend', row);
+      //modalBody.insertAdjacentHTML('beforeend', row);
+      let msg=`<i class="bi bi-${icon}"></i> ${status}`
+      records.push({filename:fileName,status:msg,remarks:remarks});
+
+      
+        
     });
+    w2ui.deletionresultsgrid.records=records;     
+    w2ui.deletionresultsgrid.refresh(); 
+    w2ui.deletionresultsgrid.scrollToColumn('remarks');
+    //w2ui.deletionresultsgrid.update(); 
+   
+   
   
     new bootstrap.Modal(document.getElementById('deletionResultsModal')).show();
 }
