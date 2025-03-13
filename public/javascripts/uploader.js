@@ -49,7 +49,8 @@ const fileSelectionResult=document.querySelector("#fileSelectionResult");
 
 fileSelectionResult.innerHTML="";
 
-var currentUpload=null;
+
+
 //var resumptionFlag=false;
 var fileToResume="";
 //resumptionInfo.style.display="none";
@@ -57,6 +58,8 @@ var fileToResume="";
 
 var upload;
 var lastUpload; // This variable to be used in case of deletion of a file which was just uploaded
+var readyFile;
+
 //var uploadFileId;
 var file;
 const allowedExtensions = ['.segy', '.sgy','.SEGY', '.SGY'];
@@ -64,16 +67,16 @@ const allowedExtensions = ['.segy', '.sgy','.SEGY', '.SGY'];
 /****************TO BE UNCOMMENTED IN PRODUCTION */
 //fileInput.accept=allowedExtensions.toString();
 
-const server_addr='localhost:3000';
-const uploadEndpoint=`http://${server_addr}/files/`;
-const fileListingEndpoint=`http://${server_addr}/pendinguploads`;
-const fileExplorerEndpoint=`http://${server_addr}/segyfilelist`;
-const fileExistCheckEndpoint=`http://${server_addr}/checkfileexists`;
-const filesStatusCheckEndpoint=`http://${server_addr}/checkfilesstatus`;
-const deletePendingUploadsEndpoint=`http://${server_addr}/deletePendingUploads`;
-const deleteFilessEndpoint=`http://${server_addr}/deleteFiles`;
-const renamePostUploadEndpoint=`http://${server_addr}/postUploadRename`;
-const renameFileEndpoint=`http://${server_addr}/renameFile`;
+const server_addr='http://localhost:3000';
+const uploadEndpoint=`${server_addr}/files/`;
+const fileListingEndpoint=`${server_addr}/pendinguploads`;
+const fileExplorerEndpoint=`${server_addr}/segyfilelist`;
+const fileExistCheckEndpoint=`${server_addr}/checkfileexists`;
+const filesStatusCheckEndpoint=`${server_addr}/checkfilesstatus`;
+const deletePendingUploadsEndpoint=`${server_addr}/deletePendingUploads`;
+const deleteFilessEndpoint=`${server_addr}/deleteFiles`;
+const renamePostUploadEndpoint=`${server_addr}/postUploadRename`;
+const renameFileEndpoint=`${server_addr}/renameFile`;
 var selectedFile = null;
 var selectedFiles=[];
 let selectedFileNames = [];
@@ -403,16 +406,18 @@ function populateFileSelectionResults(data)
         //The following code prevents execution of setupUpload on subsequent file selections
         if(!upload){
             setupUpload();
+            updateButtonState('ready');
         }
         else{ // upload already set up
-            var queueCurrItem = fileQueue.find(entry => entry.file.name === upload.file.name);
-            queueCurrItem.queueStatus.statusCode=1;    
-            let fileNum=(fileQueue.indexOf(queueCurrItem))+1;
-            let currFileLabel=`File ${fileNum} of ${fileQueue.length} : ${upload.file.name}`;
-            w2ui.currentuploadtoolbar.set('currentFilelabel',{value:currFileLabel});
+           
             //w2ui.currentuploadtoolbar.enable('startUpload');
             
         }
+        var queueCurrItem = fileQueue.find(entry => entry.file.name === upload.file.name);
+        //queueCurrItem.queueStatus.statusCode=1;    
+        let fileNum=(fileQueue.indexOf(queueCurrItem))+1;
+        let currFileLabel=`File ${fileNum} of ${fileQueue.length} : ${upload.file.name}`;
+        w2ui.currentuploadtoolbar.set('currentFilelabel',{value:currFileLabel});
         
 
         //let currentUpload=validFiles[0].file;
@@ -469,6 +474,7 @@ function renderQueue(fileQueue) {
     //queueList.innerHTML = "";    
     var records =[];
     var rowCtr=0;
+    let curruploadIndex=0;
     fileQueue.forEach((queuedfile, index) => {
         const row = document.createElement("tr");
         /*let queueMsg="";
@@ -508,6 +514,7 @@ function renderQueue(fileQueue) {
                     uploadStatus=`<i class="bi bi-chevron-double-right"></i> Uploading...`;
                     queueProgressPcId="queueProgressPc";
                     progressBarId="queueProgressBar";
+                    curruploadIndex=index;
                     break;
 
             case 2: progressbarClass="progress-bar progress-bar-striped bg-success";
@@ -565,6 +572,7 @@ function renderQueue(fileQueue) {
     w2ui.queuegrid.refresh();
     w2ui.queuegrid.toolbar.disable('moveUp','moveDown','removeFromQueue');
     w2ui.queuegrid.selectNone();
+    w2ui.queuegrid.scrollIntoView(curruploadIndex);
    
     
     
@@ -578,9 +586,9 @@ function setupUpload()
 {    
     
     
-    let validFile=validFiles.shift();
-    let file=validFile.file
-    let fileInfo=validFile.response;
+    readyFile=validFiles.shift();
+    let file=readyFile.file
+    let fileInfo=readyFile.response;
     var filepartSizeInBytes=0;
     var fileSizeInBytes=0;
     if(fileInfo.data.metadata){
@@ -955,8 +963,11 @@ function skipFile() {
             validFiles=[];
             lastUpload=upload;                       
             upload=null; 
-            updateButtonState('idle');
-        }   
+            updateButtonState('idle');            
+            
+        }  
+        listFiles(); 
+        listCompletedFiles();
     }  
 }
 
@@ -1073,6 +1084,10 @@ function updateButtonState(status) {
     switch (status) {
         case 'idle': // No upload in progress
             w2ui.currentuploadtoolbar.disable('startUpload','pauseUpload','resumeUpload','skipUpload','stopUpload');
+            break;
+        case 'ready': // No upload in progress
+            w2ui.currentuploadtoolbar.disable('pauseUpload','resumeUpload','skipUpload','stopUpload');
+            w2ui.currentuploadtoolbar.enable('startUpload',);
             break;
         case 'uploading': // Upload in progress
             w2ui.currentuploadtoolbar.disable('startUpload','resumeUpload');
@@ -1208,26 +1223,48 @@ function moveUpInQueue(fileList)
                 //console.log("Do Nothing1");
                 //Do nothing
             }                        
-            else {// means this is the middle or last item                
+            else {// means this is the middle or last item 
                 let aboveStatus=w2ui.queuegrid.get(recId-1).queuestatus; 
                 if(aboveStatus>0){ // Check again if they are in progress or done processing i.e.Uploading, Completed, failed, or Skipped
                     //console.log("Do Nothing2");
                     //Do Nothing
                 }
-                else{                 
+                else{
+                    let aboveFile=validFiles.find(entry=>entry.file.name===fileQueue[recId-1].file.name); 
                     let theFile=validFiles.find(entry=>entry.file.name===theFileRecord.filename); 
-                    if(theFile)  {// Not yet validFiles.shift()
-                        let theFileIndex=validFiles.indexOf(theFile);
+                    if(aboveFile){// Means the state is Waiting and validFiles.shift() has not run for it yet
+                        if(theFile)  {// Not yet validFiles.shift() for it just to be sure
+                            let theFileIndex=validFiles.indexOf(theFile);
+                            [validFiles[theFileIndex], validFiles[theFileIndex - 1]] = [validFiles[theFileIndex - 1], validFiles[theFileIndex]];
+                            [fileQueue[recId], fileQueue[recId - 1]] = [fileQueue[recId - 1], fileQueue[recId]];
+                            renderQueue(fileQueue);
+                            w2ui.queuegrid.select(recId-1);
+
+                            fileSelectionResult.className="";
+                            fileSelectionResult.innerHTML="";
+                            //console.log(validFiles);
+                        }
+                        else{
+                            //console.log("Do Nothing2.5");
+                        }
+                        // No need to setup upload here
+                    }
+                    else{// means the status is Ready and validFiles.shift() has run for it
+                        validFiles.unshift(readyFile);
+                        let theFileIndex=validFiles.indexOf(theFile); // Although it would 1 only
                         [validFiles[theFileIndex], validFiles[theFileIndex - 1]] = [validFiles[theFileIndex - 1], validFiles[theFileIndex]];
                         [fileQueue[recId], fileQueue[recId - 1]] = [fileQueue[recId - 1], fileQueue[recId]];
+                        setupUpload();
                         renderQueue(fileQueue);
-                        w2ui.queuegrid.select(recId-1)
-                        //console.log(validFiles);
+                        w2ui.queuegrid.select(recId-1);
+
+                        let queueCurrItem = fileQueue[recId-1];          // As item has shifted above queue           
+                        let fileNum=(fileQueue.indexOf(queueCurrItem))+1;
+                        let currFileLabel=`File ${fileNum} of ${fileQueue.length} : ${upload.file.name}`;
+                        w2ui.currentuploadtoolbar.set('currentFilelabel',{value:currFileLabel});
+                        fileSelectionResult.className="";
+                        fileSelectionResult.innerHTML="";
                     }
-                    else{
-                        //console.log("Do Nothing2.5");
-                    }
-                    
                 }                
             } 
         }
@@ -1256,20 +1293,43 @@ function moveDownInQueue(fileList)
                 //Do nothing
             }                        
             else {// means this is the middle or first item 
-                let theFile=validFiles.find(entry=>entry.file.name===theFileRecord.filename); 
-                if(theFile)  {// Not yet validFiles.shift()
-                    let theFileIndex=validFiles.indexOf(theFile);
+                if(recId===0){ // First Item. For it validFiles.shift() has taken place. 
+                    validFiles.unshift(readyFile);
+                    let theFileIndex=validFiles.indexOf(readyFile); // Although it would 0
                     [validFiles[theFileIndex], validFiles[theFileIndex + 1]] = [validFiles[theFileIndex + 1], validFiles[theFileIndex]];
                     [fileQueue[recId], fileQueue[recId + 1]] = [fileQueue[recId + 1], fileQueue[recId]];
+                    setupUpload();
                     renderQueue(fileQueue);
-                    w2ui.queuegrid.select(recId+1)
-                    //console.log("Code to Move down");   
-                    //console.log(validFiles);   
+                    w2ui.queuegrid.select(recId+1);
+
+                    let queueCurrItem = fileQueue[recId];                   
+                    let fileNum=(fileQueue.indexOf(queueCurrItem))+1;
+                    let currFileLabel=`File ${fileNum} of ${fileQueue.length} : ${upload.file.name}`;
+                    w2ui.currentuploadtoolbar.set('currentFilelabel',{value:currFileLabel});
+
+                    fileSelectionResult.className="";
+                    fileSelectionResult.innerHTML="";
+                    
                 }
                 else{
-                     //console.log("Do Nothing2");
-                    //Do Nothing
-                }                        
+                    let theFile=validFiles.find(entry=>entry.file.name===theFileRecord.filename); 
+                    if(theFile)  {
+                        let theFileIndex=validFiles.indexOf(theFile);
+                        [validFiles[theFileIndex], validFiles[theFileIndex + 1]] = [validFiles[theFileIndex + 1], validFiles[theFileIndex]];
+                        [fileQueue[recId], fileQueue[recId + 1]] = [fileQueue[recId + 1], fileQueue[recId]];
+                        renderQueue(fileQueue);
+                        w2ui.queuegrid.select(recId+1)
+                        fileSelectionResult.className="";
+                        fileSelectionResult.innerHTML="";
+                        //console.log("Code to Move down");   
+                        //console.log(validFiles);   
+                    }
+                    else{
+                        //console.log("Do Nothing3");
+                        //Do Nothing
+                    }
+                
+                }      
             } 
         }
         else{
@@ -1285,26 +1345,61 @@ function moveDownInQueue(fileList)
 
 
 function removeFromQueue(fileList) {    
-    fileList.forEach(recId=>{
-        const theFileRecord = w2ui.queuegrid.get(recId);
+
+    /**Important
+     * Since the record ids in queue are updated every time queue is rendered, the recordIds in the
+     * above fileList would be scrambled once a deletion in queue has taken place.
+     * To prevent this, we have to find and keep "To be deleted items" beforehand, rather than dynamically
+     * searching them using record id im the below foreach loop
+     *  */ 
+   
+    let filesToDelete = fileList.map(recId => {return w2ui.queuegrid.get(recId)});    
+    filesToDelete.forEach(theFileRecord=>{
         const queueStatus = theFileRecord.queuestatus;
         /*Second factor verification of status as upload may start between row selection and button click*/
         if(queueStatus===0){   //The followin code takes advantage of the fact that recids in queuegrid are indices of the queue
-            let theFile=validFiles.find(entry=>entry.file.name===theFileRecord.filename);            
-            if(theFile)  {// Not yet validFiles.shift()   
+            let theFile=validFiles.find(entry=>entry.file.name===theFileRecord.filename);
+            let theFileInQueue=fileQueue.find(entry=>entry.file.name===theFileRecord.filename);
+            recId=fileQueue.indexOf(theFileInQueue);           // Here recId is being fetched dynamically after every deletion as queue re-renders 
+            if(theFile)  {//Status is Waiting and Not yet validFiles.shift()   
                 let theFileIndex=validFiles.indexOf(theFile); 
                 validFiles.splice(theFileIndex,1);             
                 fileQueue.splice(recId, 1);
-                
                 renderQueue(fileQueue);
                 fileSelectionResult.className="";
                 fileSelectionResult.innerHTML="";
+                //Update File X of Y label
                 if(upload){
                     let queueCurrItem = fileQueue.find(entry => entry.file.name === upload.file.name);                    
                     let fileNum=(fileQueue.indexOf(queueCurrItem))+1;
                     let currFileLabel=`File ${fileNum} of ${fileQueue.length} : ${upload.file.name}`;
                     w2ui.currentuploadtoolbar.set('currentFilelabel',{value:currFileLabel});
                 }                
+            }
+            else{ //Status is Ready and  validFiles.shift()   has taken place                
+                fileQueue.splice(recId, 1);   
+                renderQueue(fileQueue);             
+                if(recId===fileQueue.length){// means it was the last item. As after splicing the length of queue decreases by 1 and becomes equal to the previously last record ID
+                    // Nothing to do. fileQueue and validfiles are both empty now
+                    w2ui.currentuploadtoolbar.set('currentFilelabel',{value:""});
+                    resetProgress();
+                    updateButtonState("idle");
+                    upload=null;
+                    statusMessage.textContent = "";   
+                }
+                else{ // Ready the next item                   
+                    setupUpload();// ready the next item
+                    //Update File X of Y label
+                    if(upload){// Which should be as setup upload has been called
+                        let queueCurrItem = fileQueue.find(entry => entry.file.name === upload.file.name);                    
+                        let fileNum=(fileQueue.indexOf(queueCurrItem))+1;
+                        let currFileLabel=`File ${fileNum} of ${fileQueue.length} : ${upload.file.name}`;
+                        w2ui.currentuploadtoolbar.set('currentFilelabel',{value:currFileLabel});
+                    }    
+                }               
+                
+                fileSelectionResult.className="";
+                fileSelectionResult.innerHTML="";                           
             }
         }
         else{
